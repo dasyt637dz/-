@@ -8,6 +8,7 @@ import {
   ThemeMode,
   WeaknessId,
 } from '../types/recovery';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface PrivacySettingsViewProps {
   state: RecoveryState;
@@ -372,6 +373,17 @@ export function PrivacySettingsView({
                 {startSaved ? 'تم التحديث' : 'حفظ التاريخ'}
               </button>
             </form>
+          </div>
+
+          <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3">
+            <h2 className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
+              تثبيت التطبيق على الهاتف (PWA / APK)
+            </h2>
+            <p className="text-xs text-[#556442] dark:text-[#A2B193] leading-relaxed">
+              التطبيق مهيّأ للعمل كتطبيق مستقل بشاشة كاملة وبدون إنترنت. ثبّته مباشرة هنا، أو
+              انسخ رابط الموقع إلى أداة <span dir="ltr">pwabuilder.com</span> لتحويله إلى ملف APK قابل للتوزيع.
+            </p>
+            <PWAInstallButton variant="settings" />
           </div>
 
           <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3">

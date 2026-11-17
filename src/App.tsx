@@ -4,9 +4,11 @@ import { DashboardView } from './components/DashboardView';
 import { HabitsShieldView } from './components/HabitsShieldView';
 import { JournalView } from './components/JournalView';
 import { MobileNav } from './components/MobileNav';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import { PinLockScreen } from './components/PinLockScreen';
 import { PrivacySettingsView } from './components/PrivacySettingsView';
+import { PWAInstallButton } from './components/PWAInstallButton';
 import { SplashScreen } from './components/SplashScreen';
 import { TopBar } from './components/TopBar';
 import { UrgeSOSView } from './components/UrgeSOSView';
@@ -112,8 +114,9 @@ export default function App() {
       <div className="relative z-10 min-h-screen flex flex-col">
         <TopBar activeTab={activeTab} onSelectTab={setActiveTab} />
 
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12">
-        {activeTab === 'dashboard' && (
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12 space-y-6">
+          <PWAInstallButton variant="banner" />
+          {activeTab === 'dashboard' && (
           <DashboardView
             state={state}
             onNavigate={setActiveTab}
@@ -213,6 +216,7 @@ export default function App() {
         </footer>
 
         <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
+        <OfflineIndicator />
       </div>
     </div>
   );
