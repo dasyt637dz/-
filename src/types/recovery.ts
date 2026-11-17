@@ -123,6 +123,13 @@ export interface MilestoneInfo {
   scienceNote: string;
 }
 
+export interface NotificationPreferences {
+  salawatBannerEnabled: boolean;
+  salawatPeriodicNotifications: boolean;
+  steadfastCheckEveryTwoHours: boolean;
+  promptDismissed: boolean;
+}
+
 export interface RecoveryState {
   streakStartedAt: string; // ISO timestamp
   bestStreakSeconds: number;
@@ -139,4 +146,5 @@ export interface RecoveryState {
   habits: ReplacementHabit[];
   completedSafeguards: string[];
   previousStreaksDays: number[]; // track past completed streaks in days
+  notifications: NotificationPreferences;
 }

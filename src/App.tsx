@@ -1,4 +1,4 @@
-import { Lock, Moon, Sun } from 'lucide-react';
+import { Bell, Lock, Moon, Sun, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { DashboardView } from './components/DashboardView';
 import { HabitsShieldView } from './components/HabitsShieldView';
@@ -9,11 +9,14 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { PinLockScreen } from './components/PinLockScreen';
 import { PrivacySettingsView } from './components/PrivacySettingsView';
 import { PWAInstallButton } from './components/PWAInstallButton';
+import { SalawatBanner } from './components/SalawatBanner';
 import { SplashScreen } from './components/SplashScreen';
+import { SteadfastCheckBanner } from './components/SteadfastCheckBanner';
 import { TopBar } from './components/TopBar';
 import { UrgeSOSView } from './components/UrgeSOSView';
 import { WarriorGuideView } from './components/WarriorGuideView';
 import { useRecoveryStore } from './hooks/useRecoveryStore';
+import { useSpiritualReminders } from './hooks/useSpiritualReminders';
 import { NavTab, TimeOfDay } from './types/recovery';
 
 function inferCurrentTimeOfDay(): TimeOfDay {
@@ -47,6 +50,7 @@ export default function App() {
     addPersonalReason,
     removePersonalReason,
     setPinCode,
+    updateNotificationPrefs,
     importState,
     clearAllData,
   } = useRecoveryStore();
@@ -60,26 +64,57 @@ export default function App() {
     setShowSplash(false);
   }, []);
 
+  const {
+    salawatVisible,
+    salawatCountdown,
+    salawatRunId,
+    steadfastPromptVisible,
+    permissionStatus,
+    requestNotificationPermission,
+    triggerSalawatBannerNow,
+    dismissSalawatBanner,
+    triggerSteadfastCheckNow,
+    dismissSteadfastPrompt,
+  } = useSpiritualReminders({
+    isAppReady: !showSplash,
+    prefs: state.notifications,
+  });
+
+  const salawatBannerNode = (
+    <SalawatBanner
+      visible={salawatVisible}
+      countdown={salawatCountdown}
+      runId={salawatRunId}
+      onDismiss={dismissSalawatBanner}
+    />
+  );
+
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
   if (isLocked && state.pinCode) {
     return (
-      <PinLockScreen
-        expectedPin={state.pinCode}
-        onUnlock={() => setIsLocked(false)}
-      />
+      <>
+        {salawatBannerNode}
+        <PinLockScreen
+          expectedPin={state.pinCode}
+          onUnlock={() => setIsLocked(false)}
+        />
+      </>
     );
   }
 
   if (!state.onboarding.completed) {
     return (
-      <OnboardingScreen
-        initialProfile={state.onboarding}
-        initialVisualAnswers={state.visualAnswers}
-        onComplete={saveOnboarding}
-      />
+      <>
+        {salawatBannerNode}
+        <OnboardingScreen
+          initialProfile={state.onboarding}
+          initialVisualAnswers={state.visualAnswers}
+          onComplete={saveOnboarding}
+        />
+      </>
     );
   }
 
@@ -112,10 +147,38 @@ export default function App() {
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
+        {salawatBannerNode}
         <TopBar activeTab={activeTab} onSelectTab={setActiveTab} />
 
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12 space-y-6">
           <PWAInstallButton variant="banner" />
+          {permissionStatus === 'default' && !state.notifications.promptDismissed && (
+            <div className="rounded-2xl bg-[#FCFDF7]/92 dark:bg-[#192315]/92 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2.5 text-xs text-[#1C2912] dark:text-[#F3F6E9]">
+                <Bell className="w-4 h-4 text-[#C98F0A] dark:text-[#ECC93B] shrink-0" aria-hidden="true" />
+                <span>
+                  فعّل الإشعارات ليصلك تذكير الصلاة على النبي ﷺ وسؤال «هل لا زلت صامداً؟» كل ساعتين.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void requestNotificationPermission()}
+                  className="min-h-[34px] px-3 py-1 rounded-xl bg-[#2F6318] dark:bg-[#ECC93B] text-white dark:text-[#11180E] text-xs font-semibold cursor-pointer"
+                >
+                  تفعيل الإشعارات
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateNotificationPrefs({ promptDismissed: true })}
+                  aria-label="إخفاء"
+                  className="p-1.5 rounded-lg text-[#556442] dark:text-[#A2B193] hover:bg-[#E5ECD0]/60 dark:hover:bg-[#2C3B24] cursor-pointer"
+                >
+                  <X className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          )}
           {activeTab === 'dashboard' && (
           <DashboardView
             state={state}
@@ -168,12 +231,17 @@ export default function App() {
         {activeTab === 'privacy' && (
           <PrivacySettingsView
             state={state}
+            notificationPermission={permissionStatus}
             onSetTheme={setTheme}
             onSetStartDate={setStreakStartDate}
             onSetPin={setPinCode}
             onLockNow={() => setIsLocked(true)}
             onSaveOnboarding={saveOnboarding}
             onSelectWeakness={setWeakness}
+            onUpdateNotifications={updateNotificationPrefs}
+            onRequestNotificationPermission={() => void requestNotificationPermission()}
+            onPreviewSalawatBanner={() => triggerSalawatBannerNow(false)}
+            onPreviewSteadfastCheck={() => triggerSteadfastCheckNow(true)}
             onImportState={importState}
             onClearAllData={clearAllData}
           />
@@ -216,6 +284,12 @@ export default function App() {
         </footer>
 
         <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
+        <SteadfastCheckBanner
+          visible={steadfastPromptVisible}
+          onConfirmSteadfast={() => {}}
+          onNeedSupport={() => setActiveTab('sos')}
+          onDismiss={dismissSteadfastPrompt}
+        />
         <OfflineIndicator />
       </div>
     </div>

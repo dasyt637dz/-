@@ -1,7 +1,9 @@
-import { Download, Lock, Moon, Sun, Trash2, Upload } from 'lucide-react';
+import { Bell, Download, Lock, Moon, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { DISCOVERY_METHODS, WEAKNESS_PLANS } from '../data/recoveryContent';
+import { BrowserNotificationStatus } from '../hooks/useSpiritualReminders';
 import {
+  NotificationPreferences,
   OnboardingIntent,
   OnboardingProfile,
   RecoveryState,
@@ -12,12 +14,17 @@ import { PWAInstallButton } from './PWAInstallButton';
 
 interface PrivacySettingsViewProps {
   state: RecoveryState;
+  notificationPermission: BrowserNotificationStatus;
   onSetTheme: (theme: ThemeMode) => void;
   onSetStartDate: (isoDate: string) => void;
   onSetPin: (pin: string | null) => void;
   onLockNow: () => void;
   onSaveOnboarding: (profile: OnboardingProfile) => void;
   onSelectWeakness: (weaknessId: WeaknessId | null) => void;
+  onUpdateNotifications: (partial: Partial<NotificationPreferences>) => void;
+  onRequestNotificationPermission: () => void;
+  onPreviewSalawatBanner: () => void;
+  onPreviewSteadfastCheck: () => void;
   onImportState: (rawJson: string) => boolean;
   onClearAllData: () => void;
 }
@@ -33,12 +40,17 @@ function toLocalDateTimeInputValue(iso: string): string {
 
 export function PrivacySettingsView({
   state,
+  notificationPermission,
   onSetTheme,
   onSetStartDate,
   onSetPin,
   onLockNow,
   onSaveOnboarding,
   onSelectWeakness,
+  onUpdateNotifications,
+  onRequestNotificationPermission,
+  onPreviewSalawatBanner,
+  onPreviewSteadfastCheck,
   onImportState,
   onClearAllData,
 }: PrivacySettingsViewProps) {
@@ -384,6 +396,116 @@ export function PrivacySettingsView({
               انسخ رابط الموقع إلى أداة <span dir="ltr">pwabuilder.com</span> لتحويله إلى ملف APK قابل للتوزيع.
             </p>
             <PWAInstallButton variant="settings" />
+          </div>
+
+          <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <h2 className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
+                  الإشعارات والتذكيرات الروحية
+                </h2>
+                <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
+                  لافتة «صلي على النبي» وإشعارات الثبات الدورية كل ساعتين.
+                </p>
+              </div>
+
+              {notificationPermission === 'default' && (
+                <button
+                  type="button"
+                  onClick={onRequestNotificationPermission}
+                  className="inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-xl bg-[#2F6318] dark:bg-[#ECC93B] text-white dark:text-[#11180E] text-xs font-semibold cursor-pointer"
+                >
+                  <Bell className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>تفعيل إشعارات الجهاز</span>
+                </button>
+              )}
+
+              {notificationPermission === 'granted' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EEF3DF] dark:bg-[#26351F] text-[11px] font-semibold text-[#2F6E1B] dark:text-[#65C449]">
+                  <Bell className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>الإشعارات مفعّلة</span>
+                </span>
+              )}
+
+              {notificationPermission === 'denied' && (
+                <span className="text-[11px] font-medium text-[#DC2626] dark:text-[#F87171]">
+                  الإشعارات محظورة من إعدادات المتصفح
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2.5 text-xs text-[#1C2912] dark:text-[#F3F6E9]">
+              <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={state.notifications.salawatBannerEnabled}
+                  onChange={(e) =>
+                    onUpdateNotifications({ salawatBannerEnabled: e.target.checked })
+                  }
+                  className="mt-0.5 accent-[#2F6318] dark:accent-[#ECC93B]"
+                />
+                <span>
+                  <span className="font-semibold block">لافتة «صلي على النبي» (3 ثوانٍ)</span>
+                  <span className="text-[#556442] dark:text-[#A2B193]">
+                    تظهر عند الدخول إلى التطبيق وفي الساعات 9:00 و 5:00 و 3:00
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={state.notifications.salawatPeriodicNotifications}
+                  onChange={(e) =>
+                    onUpdateNotifications({ salawatPeriodicNotifications: e.target.checked })
+                  }
+                  className="mt-0.5 accent-[#2F6318] dark:accent-[#ECC93B]"
+                />
+                <span>
+                  <span className="font-semibold block">إشعارات متفرقة للصلاة على النبي ﷺ</span>
+                  <span className="text-[#556442] dark:text-[#A2B193]">
+                    تذكير لطيف يظهر من حين لآخر أثناء اليوم
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={state.notifications.steadfastCheckEveryTwoHours}
+                  onChange={(e) =>
+                    onUpdateNotifications({ steadfastCheckEveryTwoHours: e.target.checked })
+                  }
+                  className="mt-0.5 accent-[#2F6318] dark:accent-[#ECC93B]"
+                />
+                <span>
+                  <span className="font-semibold block">سؤال «هل لا زلت صامداً؟» كل ساعتين</span>
+                  <span className="text-[#556442] dark:text-[#A2B193]">
+                    تذكير واطمئنان دوري لتثبيت عزمك كل ساعتين
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={onPreviewSalawatBanner}
+                className="inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-xs font-medium text-[#1C2912] dark:text-[#F3F6E9] cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C98F0A] dark:text-[#ECC93B]" aria-hidden="true" />
+                <span>معاينة لافتة «صلي على النبي»</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={onPreviewSteadfastCheck}
+                className="inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-xs font-medium text-[#1C2912] dark:text-[#F3F6E9] cursor-pointer"
+              >
+                <Bell className="w-3.5 h-3.5 text-[#2F6318] dark:text-[#65C449]" aria-hidden="true" />
+                <span>معاينة سؤال «هل لا زلت صامداً؟»</span>
+              </button>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3">

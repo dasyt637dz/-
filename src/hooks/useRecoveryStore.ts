@@ -4,6 +4,7 @@ import {
   DailyCheckIn,
   JournalEntry,
   LogEntryType,
+  NotificationPreferences,
   OnboardingProfile,
   RecoveryState,
   ThemeMode,
@@ -32,6 +33,13 @@ const DEFAULT_ONBOARDING: OnboardingProfile = {
   intent: null,
 };
 
+const DEFAULT_NOTIFICATIONS: NotificationPreferences = {
+  salawatBannerEnabled: true,
+  salawatPeriodicNotifications: true,
+  steadfastCheckEveryTwoHours: true,
+  promptDismissed: false,
+};
+
 function createDefaultState(): RecoveryState {
   return {
     streakStartedAt: new Date().toISOString(),
@@ -49,6 +57,7 @@ function createDefaultState(): RecoveryState {
     habits: DEFAULT_HABITS,
     completedSafeguards: [],
     previousStreaksDays: [],
+    notifications: DEFAULT_NOTIFICATIONS,
   };
 }
 
@@ -85,6 +94,10 @@ function loadStoredState(): RecoveryState {
       previousStreaksDays: Array.isArray(parsed.previousStreaksDays)
         ? parsed.previousStreaksDays
         : [],
+      notifications:
+        parsed.notifications && typeof parsed.notifications === 'object'
+          ? { ...DEFAULT_NOTIFICATIONS, ...parsed.notifications }
+          : DEFAULT_NOTIFICATIONS,
     };
   } catch {
     return createDefaultState();
@@ -462,6 +475,10 @@ export function useRecoveryStore() {
         previousStreaksDays: Array.isArray(parsed.previousStreaksDays)
           ? parsed.previousStreaksDays
           : [],
+        notifications:
+          parsed.notifications && typeof parsed.notifications === 'object'
+            ? { ...DEFAULT_NOTIFICATIONS, ...parsed.notifications }
+            : DEFAULT_NOTIFICATIONS,
       });
       return true;
     } catch {
@@ -473,6 +490,19 @@ export function useRecoveryStore() {
     const fresh = createDefaultState();
     setState(fresh);
   }, []);
+
+  const updateNotificationPrefs = useCallback(
+    (partial: Partial<NotificationPreferences>) => {
+      setState((prev) => ({
+        ...prev,
+        notifications: {
+          ...prev.notifications,
+          ...partial,
+        },
+      }));
+    },
+    []
+  );
 
   return {
     state,
@@ -496,6 +526,7 @@ export function useRecoveryStore() {
     addPersonalReason,
     removePersonalReason,
     setPinCode,
+    updateNotificationPrefs,
     importState,
     clearAllData,
   };
