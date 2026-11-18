@@ -17,7 +17,7 @@ import {
   RECOVERY_MILESTONES,
   WEAKNESS_PLANS,
 } from '../data/recoveryContent';
-import { getLocalDateKey } from '../hooks/useRecoveryStore';
+import { getLocalDateKey, getStreakMetrics } from '../hooks/useRecoveryStore';
 import { NavTab, RecoveryState, WeaknessId } from '../types/recovery';
 import { VisualQuestionsCard } from './VisualQuestionsCard';
 
@@ -37,15 +37,6 @@ interface DashboardViewProps {
 }
 
 type BottomSectionTab = 'weakness' | 'compass' | 'calendar';
-
-function formatDurationParts(totalSeconds: number) {
-  const safe = Math.max(0, totalSeconds);
-  const days = Math.floor(safe / 86400);
-  const hours = Math.floor((safe % 86400) / 3600);
-  const minutes = Math.floor((safe % 3600) / 60);
-  const seconds = safe % 60;
-  return { days, hours, minutes, seconds };
-}
 
 function getRecoveryStatusLabel(pct: number): string {
   if (pct < 20) return 'بداية التوازن';
@@ -89,7 +80,8 @@ export function DashboardView({
   const [showAllSolutions, setShowAllSolutions] = useState(false);
   const [confirmFailReset, setConfirmFailReset] = useState(false);
 
-  const todayKey = getLocalDateKey();
+  const nowDate = new Date(nowMs);
+  const todayKey = getLocalDateKey(nowDate);
   const todayCheckIn = state.checkIns[todayKey];
 
   const [mood, setMood] = useState<number>(todayCheckIn?.mood ?? 4);
@@ -104,14 +96,12 @@ export function DashboardView({
     return () => window.clearInterval(timer);
   }, []);
 
-  const startMs = new Date(state.streakStartedAt).getTime();
-  const elapsedSeconds = Math.max(0, Math.floor((nowMs - startMs) / 1000));
-  const duration = formatDurationParts(elapsedSeconds);
+  const duration = getStreakMetrics(state.streakStartedAt, nowMs);
+  const elapsedSeconds = duration.elapsedSeconds;
   const currentDayNumber = duration.days + 1;
   const bestDays = Math.max(duration.days, Math.floor(state.bestStreakSeconds / 86400));
 
   // Daily 24-hour clock progress
-  const nowDate = new Date(nowMs);
   const secondsIntoToday =
     nowDate.getHours() * 3600 + nowDate.getMinutes() * 60 + nowDate.getSeconds();
   const remainingTodaySeconds = Math.max(0, 86400 - secondsIntoToday);
@@ -142,7 +132,10 @@ export function DashboardView({
     };
   }, [state.checkIns, state.habits.length]);
 
-  const baseDayFactor = Math.min(1, elapsedSeconds / (30 * 86400));
+  const baseDayFactor = Math.min(
+    1,
+    Math.max(elapsedSeconds, duration.days * 86400) / (30 * 86400)
+  );
   const moodBonus = ((moodStats.avgMood - 1) / 4) * 18;
   const habitBonus = moodStats.avgHabitsRatio * 18;
 

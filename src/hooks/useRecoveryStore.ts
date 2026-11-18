@@ -21,6 +21,53 @@ export function getLocalDateKey(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+export function getStreakMetrics(streakStartedAt: string, nowMs: number = Date.now()) {
+  const startDate = new Date(streakStartedAt);
+  const nowDate = new Date(nowMs);
+
+  if (Number.isNaN(startDate.getTime()) || nowMs <= startDate.getTime()) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      elapsedSeconds: 0,
+    };
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((nowMs - startDate.getTime()) / 1000));
+
+  const startMidnight = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate()
+  ).getTime();
+  const nowMidnight = new Date(
+    nowDate.getFullYear(),
+    nowDate.getMonth(),
+    nowDate.getDate()
+  ).getTime();
+
+  const days = Math.max(0, Math.round((nowMidnight - startMidnight) / 86400000));
+
+  const subDaySeconds =
+    days === 0
+      ? elapsedSeconds
+      : nowDate.getHours() * 3600 + nowDate.getMinutes() * 60 + nowDate.getSeconds();
+
+  const hours = Math.floor(subDaySeconds / 3600);
+  const minutes = Math.floor((subDaySeconds % 3600) / 60);
+  const seconds = subDaySeconds % 60;
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    elapsedSeconds,
+  };
+}
+
 function getInitialTheme(): ThemeMode {
   return 'light';
 }
@@ -203,12 +250,13 @@ export function useRecoveryStore() {
     const todayKey = getLocalDateKey(now);
 
     setState((prev) => {
-      const currentSeconds = Math.max(
-        0,
-        Math.floor((now.getTime() - new Date(prev.streakStartedAt).getTime()) / 1000)
+      const metrics = getStreakMetrics(prev.streakStartedAt, now.getTime());
+      const updatedBest = Math.max(
+        prev.bestStreakSeconds,
+        metrics.days * 86400,
+        metrics.elapsedSeconds
       );
-      const updatedBest = Math.max(prev.bestStreakSeconds, currentSeconds);
-      const completedDays = Math.floor(currentSeconds / 86400);
+      const completedDays = metrics.days;
       const existingToday = prev.checkIns[todayKey];
 
       const relapseEntry: JournalEntry = {
@@ -276,13 +324,14 @@ export function useRecoveryStore() {
       };
 
       setState((prev) => {
-        const currentSeconds = Math.max(
-          0,
-          Math.floor((now.getTime() - new Date(prev.streakStartedAt).getTime()) / 1000)
+        const metrics = getStreakMetrics(prev.streakStartedAt, now.getTime());
+        const updatedBest = Math.max(
+          prev.bestStreakSeconds,
+          metrics.days * 86400,
+          metrics.elapsedSeconds
         );
-        const updatedBest = Math.max(prev.bestStreakSeconds, currentSeconds);
         const shouldReset = payload.type === 'relapse' && payload.resetStreak !== false;
-        const completedDays = Math.floor(currentSeconds / 86400);
+        const completedDays = metrics.days;
 
         const existingToday = prev.checkIns[todayKey];
         const updatedCheckIns = { ...prev.checkIns };

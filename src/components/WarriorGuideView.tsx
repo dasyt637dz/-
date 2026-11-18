@@ -5,6 +5,7 @@ import {
   WARRIOR_PSYCH_NOTES,
   WARRIOR_PSYCH_STAGES,
 } from '../data/recoveryContent';
+import { getStreakMetrics } from '../hooks/useRecoveryStore';
 import { NavTab, WarriorTipCategory } from '../types/recovery';
 
 interface WarriorGuideViewProps {
@@ -24,9 +25,7 @@ const TIP_FILTERS: { id: TipFilter; label: string }[] = [
 
 export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideViewProps) {
   const currentDayNumber = useMemo(() => {
-    const startMs = new Date(streakStartedAt).getTime();
-    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
-    return Math.floor(elapsedSeconds / 86400) + 1;
+    return getStreakMetrics(streakStartedAt).days + 1;
   }, [streakStartedAt]);
 
   const activeStage = useMemo(() => {
