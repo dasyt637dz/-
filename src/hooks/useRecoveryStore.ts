@@ -379,8 +379,15 @@ export function useRecoveryStore() {
   }, []);
 
   const saveDailyCheckIn = useCallback(
-    (payload: { mood: number; urgeLevel: number; note: string; dateKey?: string }) => {
+    (payload: {
+      mood: number;
+      urgeLevel: number;
+      note: string;
+      tags?: string[];
+      dateKey?: string;
+    }) => {
       const key = payload.dateKey ?? getLocalDateKey();
+      const nowIso = new Date().toISOString();
       setState((prev) => {
         const existing = prev.checkIns[key];
         const nextCheckIn: DailyCheckIn = {
@@ -388,6 +395,8 @@ export function useRecoveryStore() {
           mood: payload.mood,
           urgeLevel: payload.urgeLevel,
           note: payload.note.trim(),
+          tags: payload.tags ?? existing?.tags ?? [],
+          checkedInAt: nowIso,
           completedHabitIds: existing?.completedHabitIds ?? [],
           status: existing?.status ?? 'clean',
         };

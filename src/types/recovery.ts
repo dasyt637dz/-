@@ -1,6 +1,6 @@
 export type ThemeMode = 'light' | 'dark';
 
-export type NavTab = 'dashboard' | 'guide' | 'sos' | 'journal' | 'habits' | 'privacy';
+export type NavTab = 'dashboard' | 'guide' | 'sos' | 'companion' | 'journal' | 'habits' | 'privacy';
 
 export type WarriorTipCategory = 'morning' | 'free_time' | 'night' | 'mindset';
 
@@ -99,6 +99,8 @@ export interface DailyCheckIn {
   mood: number; // 1 to 5
   urgeLevel: number; // 1 to 5
   note: string;
+  tags?: string[];
+  checkedInAt?: string;
   completedHabitIds: string[];
   status: 'clean' | 'relapse';
 }

@@ -2,5 +2,5 @@
   "name": "صفاء — رفيق التعافي والانضباط",
   "description": "تطبيق شخصي بخصوصية تامة على جهازك يساعدك على التعافي من إدمان الإباحية والعادة السرية وبناء عادات بديلة صحية.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

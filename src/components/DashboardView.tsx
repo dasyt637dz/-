@@ -19,12 +19,18 @@ import {
 } from '../data/recoveryContent';
 import { getLocalDateKey, getStreakMetrics } from '../hooks/useRecoveryStore';
 import { NavTab, RecoveryState, WeaknessId } from '../types/recovery';
+import { DailyCheckInCard } from './DailyCheckInCard';
 import { VisualQuestionsCard } from './VisualQuestionsCard';
 
 interface DashboardViewProps {
   state: RecoveryState;
   onNavigate: (tab: NavTab) => void;
-  onSaveCheckIn: (payload: { mood: number; urgeLevel: number; note: string }) => void;
+  onSaveCheckIn: (payload: {
+    mood: number;
+    urgeLevel: number;
+    note: string;
+    tags?: string[];
+  }) => void;
   onQuickVictory: () => void;
   onAddReason: (reason: string) => void;
   onRemoveReason: (index: number) => void;
@@ -83,11 +89,9 @@ export function DashboardView({
   const nowDate = new Date(nowMs);
   const todayKey = getLocalDateKey(nowDate);
   const todayCheckIn = state.checkIns[todayKey];
-
-  const [mood, setMood] = useState<number>(todayCheckIn?.mood ?? 4);
-  const [urgeLevel, setUrgeLevel] = useState<number>(todayCheckIn?.urgeLevel ?? 2);
-  const [dailyNote, setDailyNote] = useState<string>(todayCheckIn?.note ?? '');
-  const [checkInSaved, setCheckInSaved] = useState(false);
+  const yesterdayDate = new Date(nowDate);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayCheckIn = state.checkIns[getLocalDateKey(yesterdayDate)];
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -219,13 +223,6 @@ export function DashboardView({
 
   const [inspectedDayKey, setInspectedDayKey] = useState<string>(todayKey);
   const inspectedCheckIn = state.checkIns[inspectedDayKey];
-
-  const handleSaveCheckIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSaveCheckIn({ mood, urgeLevel, note: dailyNote });
-    setCheckInSaved(true);
-    window.setTimeout(() => setCheckInSaved(false), 2500);
-  };
 
   const handleQuickVictory = () => {
     onQuickVictory();
@@ -578,92 +575,13 @@ export function DashboardView({
 
         {/* Left Column (5 cols): Daily Check-In + Personal Reasons */}
         <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* Daily Check-in */}
-          <section
-            aria-labelledby="checkin-heading"
-            className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6"
-          >
-            <h2
-              id="checkin-heading"
-              className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
-            >
-              تقييم اليوم السريع
-            </h2>
-            <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-              يغذي مؤشرات التعافي ويحفظ حالة يومك
-            </p>
-
-            <form onSubmit={handleSaveCheckIn} className="mt-4 space-y-3.5">
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">المزاج</span>
-                  <span className="text-[#556442] dark:text-[#A2B193] tabular-nums">{mood} / ٥</span>
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setMood(val)}
-                      className={`min-h-[38px] rounded-lg text-xs font-mono-num font-semibold border transition-colors cursor-pointer ${
-                        mood === val
-                          ? 'bg-[#C98F0A] border-[#C98F0A] text-white dark:bg-[#ECC93B] dark:border-[#ECC93B] dark:text-[#11180E]'
-                          : 'bg-[#F4F6E8] dark:bg-[#11180E] border-[#D5DEC0] dark:border-[#2C3B24] text-[#556442] dark:text-[#A2B193]'
-                      }`}
-                    >
-                      {val}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">شدة الرغبة</span>
-                  <span className="text-[#556442] dark:text-[#A2B193] tabular-nums">
-                    {urgeLevel} / ٥
-                  </span>
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setUrgeLevel(val)}
-                      className={`min-h-[38px] rounded-lg text-xs font-mono-num font-semibold border transition-colors cursor-pointer ${
-                        urgeLevel === val
-                          ? 'bg-[#2F6318] border-[#2F6318] text-white dark:bg-[#F3F6E9] dark:border-[#F3F6E9] dark:text-[#11180E]'
-                          : 'bg-[#F4F6E8] dark:bg-[#11180E] border-[#D5DEC0] dark:border-[#2C3B24] text-[#556442] dark:text-[#A2B193]'
-                      }`}
-                    >
-                      {val}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="daily-note-input" className="sr-only">
-                  ملاحظة مختصرة لليوم
-                </label>
-                <textarea
-                  id="daily-note-input"
-                  rows={2}
-                  value={dailyNote}
-                  onChange={(e) => setDailyNote(e.target.value)}
-                  placeholder="سطر مختصر عن يومك..."
-                  className="w-full p-3 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] text-xs sm:text-sm text-[#1C2912] dark:text-[#F3F6E9] placeholder:text-[#556442] focus:outline-2 focus:outline-[#C98F0A]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full min-h-[42px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-xs sm:text-sm font-medium transition-colors cursor-pointer"
-              >
-                {checkInSaved ? 'تم حفظ تقييم اليوم' : 'حفظ تقييم اليوم'}
-              </button>
-            </form>
-          </section>
+          <DailyCheckInCard
+            todayKey={todayKey}
+            todayCheckIn={todayCheckIn}
+            yesterdayCheckIn={yesterdayCheckIn}
+            onSaveCheckIn={onSaveCheckIn}
+            onNavigate={onNavigate}
+          />
 
           {/* Personal Reasons */}
           <section
@@ -1001,6 +919,18 @@ export function DashboardView({
                     <span className="tabular-nums">المزاج: {inspectedCheckIn.mood}/٥</span>
                     <span aria-hidden="true">·</span>
                     <span className="tabular-nums">الرغبة: {inspectedCheckIn.urgeLevel}/٥</span>
+                    {inspectedCheckIn.tags && inspectedCheckIn.tags.length > 0 && (
+                      <div className="w-full flex flex-wrap gap-1.5 mt-1">
+                        {inspectedCheckIn.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 rounded-lg bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-[11px] text-[#556442] dark:text-[#A2B193]"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     {inspectedCheckIn.note && (
                       <p className="w-full text-xs text-[#556442] dark:text-[#A2B193] mt-1">
                         “{inspectedCheckIn.note}”

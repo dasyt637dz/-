@@ -752,6 +752,16 @@ export const URGE_INTERRUPT_ACTIONS: { id: string; title: string; detail: string
     title: '١٥ تمرين ضغط أو مشي سريع ١٠ دقائق',
     detail: 'حوّل التوتر الجسدي إلى حركة بدنية فعلية تستهلك الطاقة المتراكمة.',
   },
+  {
+    id: 'act_wudu',
+    title: 'توضّأ بماء بارد وصلِّ ركعتين',
+    detail: 'الوضوء يطفئ حرارة التوتر والصلاة تمنحك سكينة فورية وتفصلك عن المثير.',
+  },
+  {
+    id: 'act_water',
+    title: 'اشرب كوب ماء بارد ببطء',
+    detail: 'شرب الماء ببطء يهدئ تسارع النبض ويعيد لذهنك توازنه.',
+  },
 ];
 
 export const DEFAULT_PERSONAL_REASONS: string[] = [
