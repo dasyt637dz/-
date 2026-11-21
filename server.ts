@@ -113,13 +113,9 @@ async function startServer() {
       parts: [{ text: m.text.trim() }],
     }));
 
-    try {
-      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-      res.setHeader('Cache-Control', 'no-cache, no-transform');
-      res.setHeader('Connection', 'keep-alive');
-
-      const stream = await ai.models.generateContentStream({
-        model: 'gemini-4-hydrogen',
+    const callStreamWithModel = async (modelName: string) => {
+      return ai.models.generateContentStream({
+        model: modelName,
         contents,
         config: {
           systemInstruction: buildSystemInstruction(body?.context),
@@ -128,6 +124,46 @@ async function startServer() {
           },
         },
       });
+    };
+
+    try {
+      let stream: Awaited<ReturnType<typeof callStreamWithModel>> | null = null;
+      const candidateModels = ['gemini-4-hydrogen', 'gemini-4-hydrogen', 'gemini-3.1-flash-lite'];
+      let lastErr: unknown = null;
+
+      for (let idx = 0; idx < candidateModels.length; idx++) {
+        const modelName = candidateModels[idx];
+        try {
+          stream = await callStreamWithModel(modelName);
+          break;
+        } catch (err) {
+          lastErr = err;
+          const errStatus =
+            typeof err === 'object' && err !== null && 'status' in err
+              ? Number((err as { status?: unknown }).status)
+              : undefined;
+          const errMsg = err instanceof Error ? err.message : String(err ?? '');
+          const isTransientBusy =
+            errStatus === 503 ||
+            errStatus === 500 ||
+            errMsg.includes('UNAVAILABLE') ||
+            errMsg.includes('high demand');
+
+          if (!isTransientBusy || idx === candidateModels.length - 1) {
+            throw err;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 450 * (idx + 1)));
+        }
+      }
+
+      if (!stream) {
+        throw lastErr ?? new Error('Failed to open stream');
+      }
+
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
 
       for await (const chunk of stream) {
         const text = chunk.text;
@@ -140,18 +176,36 @@ async function startServer() {
       res.end();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'تعذر التواصل مع الرفيق الذكي الآن.';
-      console.error('[companion/chat] error:', message);
+        err instanceof Error ? err.message : String(err ?? 'Unknown error');
+      const status =
+        typeof err === 'object' && err !== null && 'status' in err
+          ? Number((err as { status?: unknown }).status)
+          : undefined;
+      console.error('[companion/chat] error:', status, message);
 
       let userFriendlyError = 'حدث خطأ أثناء الاتصال بالرفيق الذكي. حاول مرة أخرى بعد لحظة.';
-      if (message.includes('API_KEY_INVALID') || message.includes('PERMISSION_DENIED')) {
-        userFriendlyError = 'مفتاح الخدمة غير صالح أو غير مصرح له. يرجى مراجعة الإعدادات.';
-      } else if (message.includes('RESOURCE_EXHAUSTED') || message.includes('429')) {
+      if (
+        status === 403 ||
+        status === 401 ||
+        message.includes('API_KEY_INVALID') ||
+        message.includes('PERMISSION_DENIED')
+      ) {
+        userFriendlyError =
+          'مفتاح Gemini API غير صالح أو غير مضبوط في الإعدادات (Settings > Secrets).';
+      } else if (status === 429 || message.includes('RESOURCE_EXHAUSTED')) {
         userFriendlyError = 'تم تجاوز حد الطلبات المؤقت حالياً. انتظر دقيقة ثم حاول مجدداً.';
+      } else if (status === 503 || message.includes('UNAVAILABLE') || message.includes('high demand')) {
+        userFriendlyError = 'الخادم يشهد ضغطاً مؤقتاً الآن؛ جرّب إرسال رسالتك مرة أخرى بعد لحظات.';
+      } else if (status === 404 || message.includes('NOT_FOUND')) {
+        userFriendlyError = 'النموذج المطلوب غير متاح حالياً لهذا المفتاح.';
+      } else if (status === 400 || message.includes('INVALID_ARGUMENT')) {
+        userFriendlyError = 'تعذر معالجة الرسالة بالصيغة الحالية.';
       }
 
       if (!res.headersSent) {
-        res.status(502).json({ error: userFriendlyError });
+        res.status(status === 503 ? 503 : 502).json({
+          error: userFriendlyError,
+        });
       } else {
         res.write(`data: ${JSON.stringify({ error: userFriendlyError })}\n\n`);
         res.end();
