@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { Bell, HeartHandshake, Lock, Moon, Sun, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { CompanionView } from './components/CompanionView';
@@ -131,7 +132,9 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col text-[#1C2912] dark:text-[#F3F6E9]">
+    <>
+      <Analytics />
+      <div className="relative min-h-screen flex flex-col text-[#1C2912] dark:text-[#F3F6E9]">
       {/* Fixed Full-Viewport Meadow Background */}
       <div className="fixed inset-0 z-0 pointer-events-none bg-[#F4F6E8] dark:bg-[#11180E]">
         {!bgImgFailed && (
@@ -312,6 +315,7 @@ export default function App() {
         />
         <OfflineIndicator />
       </div>
-    </div>
+      </div>
+    </>
   );
 }
