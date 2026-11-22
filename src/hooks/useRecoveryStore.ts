@@ -94,7 +94,6 @@ function createDefaultState(): RecoveryState {
     theme: getInitialTheme(),
     pinCode: null,
     onboarding: DEFAULT_ONBOARDING,
-    visualAnswers: {},
     selectedWeakness: null,
     weaknessCustomNote: '',
     appliedSolutionDates: [],
@@ -121,10 +120,6 @@ function loadStoredState(): RecoveryState {
         parsed.onboarding && typeof parsed.onboarding === 'object'
           ? { ...DEFAULT_ONBOARDING, ...parsed.onboarding }
           : DEFAULT_ONBOARDING,
-      visualAnswers:
-        parsed.visualAnswers && typeof parsed.visualAnswers === 'object'
-          ? parsed.visualAnswers
-          : {},
       appliedSolutionDates: Array.isArray(parsed.appliedSolutionDates)
         ? parsed.appliedSolutionDates
         : [],
@@ -182,31 +177,10 @@ export function useRecoveryStore() {
     setState((prev) => ({ ...prev, theme }));
   }, []);
 
-  const saveOnboarding = useCallback(
-    (profile: OnboardingProfile, visualAnswers?: Record<string, string>) => {
-      setState((prev) => ({
-        ...prev,
-        onboarding: { ...profile, completed: true },
-        visualAnswers: visualAnswers ? { ...prev.visualAnswers, ...visualAnswers } : prev.visualAnswers,
-      }));
-    },
-    []
-  );
-
-  const setVisualAnswer = useCallback((questionId: string, optionId: string) => {
+  const saveOnboarding = useCallback((profile: OnboardingProfile) => {
     setState((prev) => ({
       ...prev,
-      visualAnswers: {
-        ...prev.visualAnswers,
-        [questionId]: optionId,
-      },
-    }));
-  }, []);
-
-  const resetVisualAnswers = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      visualAnswers: {},
+      onboarding: { ...profile, completed: true },
     }));
   }, []);
 
@@ -511,10 +485,6 @@ export function useRecoveryStore() {
           parsed.onboarding && typeof parsed.onboarding === 'object'
             ? { ...DEFAULT_ONBOARDING, ...parsed.onboarding }
             : defaults.onboarding,
-        visualAnswers:
-          parsed.visualAnswers && typeof parsed.visualAnswers === 'object'
-            ? parsed.visualAnswers
-            : {},
         appliedSolutionDates: Array.isArray(parsed.appliedSolutionDates)
           ? parsed.appliedSolutionDates
           : [],
@@ -567,8 +537,6 @@ export function useRecoveryStore() {
     toggleTheme,
     setTheme,
     saveOnboarding,
-    setVisualAnswer,
-    resetVisualAnswers,
     setWeakness,
     setWeaknessCustomNote,
     markDailySolutionApplied,

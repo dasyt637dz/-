@@ -1,6 +1,6 @@
 export type ThemeMode = 'light' | 'dark';
 
-export type NavTab = 'dashboard' | 'guide' | 'sos' | 'companion' | 'journal' | 'habits' | 'privacy';
+export type NavTab = 'dashboard' | 'guide' | 'sos' | 'journal' | 'habits' | 'privacy';
 
 export type WarriorTipCategory = 'morning' | 'free_time' | 'night' | 'mindset';
 
@@ -52,22 +52,6 @@ export interface OnboardingProfile {
   discoveryMethod: string;
   discoveryCustom: string;
   intent: OnboardingIntent | null;
-}
-
-export interface VisualQuestionOption {
-  id: string;
-  title: string;
-  subtitle: string;
-  imageSrc: string;
-  imageAlt: string;
-  archetypeTag: string;
-}
-
-export interface VisualQuestion {
-  id: string;
-  prompt: string;
-  helper: string;
-  options: VisualQuestionOption[];
 }
 
 export interface WeaknessSolution {
@@ -138,7 +122,6 @@ export interface RecoveryState {
   theme: ThemeMode;
   pinCode: string | null; // 4-digit PIN or null
   onboarding: OnboardingProfile;
-  visualAnswers: Record<string, string>; // questionId -> optionId
   selectedWeakness: WeaknessId | null;
   weaknessCustomNote: string;
   appliedSolutionDates: string[]; // YYYY-MM-DD

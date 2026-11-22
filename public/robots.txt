@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fawn-kappa-61.vercel.app/sitemap.xml

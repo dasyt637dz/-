@@ -1,4 +1,4 @@
-import { Bell, Download, Lock, Moon, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
+import { Bell, Check, Download, Lock, Moon, Share2, Sparkles, Sun, Trash2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { DISCOVERY_METHODS, WEAKNESS_PLANS } from '../data/recoveryContent';
 import { BrowserNotificationStatus } from '../hooks/useSpiritualReminders';
@@ -76,7 +76,34 @@ export function PrivacySettingsView({
 
   const [importMessage, setImportMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleShareApp = async () => {
+    const shareUrl = window.location.origin;
+    const shareData = {
+      title: 'صمود — رفيق التعافي وبناء الانضباط',
+      text: 'تطبيق صمود المجاني بخصوصية تامة على جهازك لبناء الانضباط والثبات.',
+      url: shareUrl,
+    };
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+        await navigator.share(shareData);
+        setShareFeedback('تم فتح قائمة المشاركة');
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback('تم نسخ رابط التطبيق للمشاركة');
+      }
+    } catch {
+      try {
+        await navigator.clipboard?.writeText(shareUrl);
+        setShareFeedback('تم نسخ رابط التطبيق للمشاركة');
+      } catch {
+        setShareFeedback('');
+      }
+    }
+    window.setTimeout(() => setShareFeedback(''), 3000);
+  };
 
   const handleSaveStartDate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -389,13 +416,27 @@ export function PrivacySettingsView({
 
           <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3">
             <h2 className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
-              تثبيت التطبيق على الهاتف (PWA / APK)
+              تثبيت التطبيق ومشاركته مع الآخرين
             </h2>
             <p className="text-xs text-[#556442] dark:text-[#A2B193] leading-relaxed">
               التطبيق مهيّأ للعمل كتطبيق مستقل بشاشة كاملة وبدون إنترنت. ثبّته مباشرة هنا، أو
-              انسخ رابط الموقع إلى أداة <span dir="ltr">pwabuilder.com</span> لتحويله إلى ملف APK قابل للتوزيع.
+              شاركه مع من يحتاج إليه، أو انسخ رابط الموقع إلى <span dir="ltr">pwabuilder.com</span> لتحويله إلى ملف APK.
             </p>
-            <PWAInstallButton variant="settings" />
+            <div className="flex flex-wrap items-center gap-2.5">
+              <PWAInstallButton variant="settings" />
+              <button
+                type="button"
+                onClick={() => void handleShareApp()}
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-xs sm:text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9] hover:border-[#C98F0A] cursor-pointer"
+              >
+                {shareFeedback ? (
+                  <Check className="w-4 h-4 text-[#2F6E1B] dark:text-[#65C449]" aria-hidden="true" />
+                ) : (
+                  <Share2 className="w-4 h-4 text-[#C98F0A] dark:text-[#ECC93B]" aria-hidden="true" />
+                )}
+                <span>{shareFeedback || 'مشاركة رابط التطبيق'}</span>
+              </button>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3.5">

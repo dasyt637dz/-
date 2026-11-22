@@ -2,7 +2,6 @@ import {
   Calendar,
   Check,
   ChevronDown,
-  Compass,
   Plus,
   RotateCcw,
   ShieldAlert,
@@ -20,7 +19,6 @@ import {
 import { getLocalDateKey, getStreakMetrics } from '../hooks/useRecoveryStore';
 import { NavTab, RecoveryState, WeaknessId } from '../types/recovery';
 import { DailyCheckInCard } from './DailyCheckInCard';
-import { VisualQuestionsCard } from './VisualQuestionsCard';
 
 interface DashboardViewProps {
   state: RecoveryState;
@@ -38,11 +36,9 @@ interface DashboardViewProps {
   onChangeWeaknessNote: (note: string) => void;
   onMarkSolutionApplied: () => void;
   onResetStreakExplicit: () => void;
-  onSelectVisualAnswer: (questionId: string, optionId: string) => void;
-  onResetVisualAnswers: () => void;
 }
 
-type BottomSectionTab = 'weakness' | 'compass' | 'calendar';
+type BottomSectionTab = 'weakness' | 'calendar';
 
 function getRecoveryStatusLabel(pct: number): string {
   if (pct < 20) return 'بداية التوازن';
@@ -75,11 +71,9 @@ export function DashboardView({
   onChangeWeaknessNote,
   onMarkSolutionApplied,
   onResetStreakExplicit,
-  onSelectVisualAnswer,
-  onResetVisualAnswers,
 }: DashboardViewProps) {
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const [bottomTab, setBottomTab] = useState<BottomSectionTab>('compass');
+  const [bottomTab, setBottomTab] = useState<BottomSectionTab>('weakness');
   const [selectedMilestoneDays, setSelectedMilestoneDays] = useState<number>(3);
   const [newReason, setNewReason] = useState('');
   const [victoryFeedback, setVictoryFeedback] = useState(false);
@@ -255,9 +249,11 @@ export function DashboardView({
           <h1 className="font-display text-lg sm:text-xl font-bold text-[#1C2912] dark:text-[#F3F6E9] leading-snug text-balance">
             «{FEATURED_RECOVERY_QUOTE.text}»
           </h1>
-          <footer className="text-xs font-medium text-[#9A6B06] dark:text-[#ECC93B] whitespace-nowrap shrink-0">
-            — {FEATURED_RECOVERY_QUOTE.author}
-          </footer>
+          {FEATURED_RECOVERY_QUOTE.author && (
+            <footer className="text-xs font-medium text-[#9A6B06] dark:text-[#ECC93B] whitespace-nowrap shrink-0">
+              — {FEATURED_RECOVERY_QUOTE.author}
+            </footer>
+          )}
         </blockquote>
       </section>
 
@@ -648,7 +644,6 @@ export function DashboardView({
             className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24]"
           >
             {[
-              { id: 'compass', label: 'البوصلة المصوّرة', icon: Compass },
               { id: 'weakness', label: 'خطة نقطة الضعف', icon: Target },
               { id: 'calendar', label: 'التقويم ومراحل ٩٠ يوماً', icon: Calendar },
             ].map((tab) => {
@@ -674,15 +669,6 @@ export function DashboardView({
             })}
           </div>
         </div>
-
-        {/* Tab 1: Visual Compass Questions */}
-        {bottomTab === 'compass' && (
-          <VisualQuestionsCard
-            answers={state.visualAnswers}
-            onSelectAnswer={onSelectVisualAnswer}
-            onResetAnswers={onResetVisualAnswers}
-          />
-        )}
 
         {/* Tab 2: Weakness Question & Proven Solutions */}
         {bottomTab === 'weakness' && (

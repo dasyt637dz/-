@@ -1,6 +1,6 @@
-import { Bell, HeartHandshake, Lock, Moon, Sun, X } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
+import { Bell, Lock, Moon, Sun, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { CompanionView } from './components/CompanionView';
 import { DashboardView } from './components/DashboardView';
 import { HabitsShieldView } from './components/HabitsShieldView';
 import { JournalView } from './components/JournalView';
@@ -34,8 +34,6 @@ export default function App() {
     toggleTheme,
     setTheme,
     saveOnboarding,
-    setVisualAnswer,
-    resetVisualAnswers,
     setWeakness,
     setWeaknessCustomNote,
     markDailySolutionApplied,
@@ -91,7 +89,12 @@ export default function App() {
   );
 
   if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />;
+    return (
+      <>
+        <SplashScreen onComplete={handleSplashComplete} />
+        <Analytics />
+      </>
+    );
   }
 
   if (isLocked && state.pinCode) {
@@ -112,7 +115,6 @@ export default function App() {
         {salawatBannerNode}
         <OnboardingScreen
           initialProfile={state.onboarding}
-          initialVisualAnswers={state.visualAnswers}
           onComplete={saveOnboarding}
         />
       </>
@@ -192,8 +194,6 @@ export default function App() {
             onChangeWeaknessNote={setWeaknessCustomNote}
             onMarkSolutionApplied={markDailySolutionApplied}
             onResetStreakExplicit={resetStreakExplicit}
-            onSelectVisualAnswer={setVisualAnswer}
-            onResetVisualAnswers={resetVisualAnswers}
           />
         )}
 
@@ -208,12 +208,7 @@ export default function App() {
           <UrgeSOSView
             personalReasons={state.personalReasons}
             onWaveSurvived={handleQuickVictory}
-            onOpenCompanion={() => setActiveTab('companion')}
           />
-        )}
-
-        {activeTab === 'companion' && (
-          <CompanionView state={state} onNavigate={setActiveTab} />
         )}
 
         {activeTab === 'journal' && (
@@ -290,20 +285,6 @@ export default function App() {
         </footer>
 
         <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
-        {activeTab !== 'companion' && (
-          <button
-            type="button"
-            onClick={() => setActiveTab('companion')}
-            aria-label="تحدث مع أنيس رفيق الأنس"
-            className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-40 inline-flex items-center gap-2 min-h-[44px] px-4 py-2.5 rounded-2xl bg-[#FCFDF7]/95 dark:bg-[#192315]/95 backdrop-blur-md border-2 border-[#C98F0A]/75 dark:border-[#ECC93B]/75 text-xs font-semibold text-[#1C2912] dark:text-[#F3F6E9] shadow-lg hover:border-[#2F6318] dark:hover:border-[#ECC93B] cursor-pointer transition-colors"
-          >
-            <HeartHandshake
-              className="w-4 h-4 text-[#9A6B06] dark:text-[#ECC93B] shrink-0"
-              aria-hidden="true"
-            />
-            <span>أنيس · يؤنسك</span>
-          </button>
-        )}
         <SteadfastCheckBanner
           visible={steadfastPromptVisible}
           onConfirmSteadfast={() => {}}
@@ -311,6 +292,7 @@ export default function App() {
           onDismiss={dismissSteadfastPrompt}
         />
         <OfflineIndicator />
+        <Analytics />
       </div>
     </div>
   );

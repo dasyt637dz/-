@@ -1,29 +1,21 @@
 import { ArrowRight, Check } from 'lucide-react';
 import { useState } from 'react';
-import {
-  DISCOVERY_METHODS,
-  VISUAL_ASSESSMENT_QUESTIONS,
-} from '../data/recoveryContent';
+import { DISCOVERY_METHODS } from '../data/recoveryContent';
 import { OnboardingIntent, OnboardingProfile } from '../types/recovery';
 import { SomoudEmblem } from './SomoudEmblem';
 
 interface OnboardingScreenProps {
   initialProfile: OnboardingProfile;
-  initialVisualAnswers: Record<string, string>;
-  onComplete: (
-    profile: OnboardingProfile,
-    visualAnswers?: Record<string, string>
-  ) => void;
+  onComplete: (profile: OnboardingProfile) => void;
 }
 
 const QUICK_AGES = [15, 18, 25, 35];
 
 export function OnboardingScreen({
   initialProfile,
-  initialVisualAnswers,
   onComplete,
 }: OnboardingScreenProps) {
-  const totalSteps = 3 + VISUAL_ASSESSMENT_QUESTIONS.length;
+  const totalSteps = 3;
   const [step, setStep] = useState<number>(1);
   const [ageInput, setAgeInput] = useState<string>(
     initialProfile.age ? String(initialProfile.age) : ''
@@ -35,28 +27,19 @@ export function OnboardingScreen({
     initialProfile.discoveryCustom || ''
   );
   const [intent, setIntent] = useState<OnboardingIntent | null>(initialProfile.intent);
-  const [visualAnswers, setVisualAnswers] = useState<Record<string, string>>(
-    initialVisualAnswers
-  );
 
   const parsedAge = ageInput.trim() ? Number(ageInput) : null;
   const isAgeValid = parsedAge === null || (parsedAge >= 10 && parsedAge <= 99);
 
   const handleFinish = () => {
-    onComplete(
-      {
-        completed: true,
-        age: parsedAge && parsedAge >= 10 && parsedAge <= 99 ? parsedAge : null,
-        discoveryMethod: discoveryMethod || 'لا أتذكر بالضبط',
-        discoveryCustom: discoveryMethod === 'شيء آخر' ? discoveryCustom.trim() : '',
-        intent: intent ?? 'quit',
-      },
-      visualAnswers
-    );
+    onComplete({
+      completed: true,
+      age: parsedAge && parsedAge >= 10 && parsedAge <= 99 ? parsedAge : null,
+      discoveryMethod: discoveryMethod || 'لا أتذكر بالضبط',
+      discoveryCustom: discoveryMethod === 'شيء آخر' ? discoveryCustom.trim() : '',
+      intent: intent ?? 'quit',
+    });
   };
-
-  const currentVisualQuestion =
-    step >= 4 ? VISUAL_ASSESSMENT_QUESTIONS[step - 4] : null;
 
   return (
     <div className="min-h-screen bg-[#F4F6E8] dark:bg-[#11180E] flex items-center justify-center p-4 sm:p-6">
@@ -280,100 +263,11 @@ export function OnboardingScreen({
               </button>
               <button
                 type="button"
-                onClick={() => setStep(4)}
+                onClick={handleFinish}
                 className="flex-1 min-h-[48px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-sm font-semibold transition-colors cursor-pointer"
               >
-                التالي (أسئلة البوصلة بالصور)
+                ابدأ رحلتي
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Steps 4-7: Visual Questions with Images Next to Answers */}
-        {currentVisualQuestion && (
-          <div className="space-y-5">
-            <div className="text-center">
-              <h1 className="font-display text-xl font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
-                {currentVisualQuestion.prompt}
-              </h1>
-              <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-1">
-                {currentVisualQuestion.helper}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {currentVisualQuestion.options.map((opt) => {
-                const selected = visualAnswers[currentVisualQuestion.id] === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() =>
-                      setVisualAnswers((prev) => ({
-                        ...prev,
-                        [currentVisualQuestion.id]: opt.id,
-                      }))
-                    }
-                    className={`p-3 rounded-xl border text-right flex items-center gap-3.5 transition-colors cursor-pointer ${
-                      selected
-                        ? 'bg-[#C98F0A]/10 border-[#C98F0A] dark:bg-[#ECC93B]/15 dark:border-[#ECC93B]'
-                        : 'bg-[#F4F6E8] dark:bg-[#11180E] border-[#D5DEC0] dark:border-[#2C3B24] hover:border-[#C98F0A]/60'
-                    }`}
-                  >
-                    <img
-                      src={opt.imageSrc}
-                      alt={opt.imageAlt}
-                      referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#D5DEC0] dark:border-[#2C3B24]"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
-                          {opt.title}
-                        </span>
-                        {selected && (
-                          <Check
-                            className="w-4 h-4 text-[#9A6B06] dark:text-[#ECC93B] shrink-0"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </div>
-                      <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-1 leading-relaxed">
-                        {opt.subtitle}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setStep((prev) => Math.max(1, prev - 1))}
-                className="min-h-[48px] px-4 rounded-xl border border-[#D5DEC0] dark:border-[#2C3B24] text-sm font-medium text-[#556442] dark:text-[#A2B193] inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                <span>رجوع</span>
-              </button>
-
-              {step < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={() => setStep((prev) => prev + 1)}
-                  className="flex-1 min-h-[48px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-sm font-semibold transition-colors cursor-pointer"
-                >
-                  التالي
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleFinish}
-                  className="flex-1 min-h-[48px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-sm font-semibold transition-colors cursor-pointer"
-                >
-                  ابدأ رحلتي
-                </button>
-              )}
             </div>
           </div>
         )}

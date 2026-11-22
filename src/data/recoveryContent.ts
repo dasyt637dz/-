@@ -3,7 +3,6 @@ import {
   ReplacementHabit,
   SafeguardItem,
   TimeOfDay,
-  VisualQuestion,
   WarriorPsychNote,
   WarriorPsychStage,
   WarriorTip,
@@ -11,174 +10,6 @@ import {
 } from '../types/recovery';
 
 export const SOMOUD_LOGO_SRC = '/src/assets/images/somoud_boulder_sketch_1794855206357.jpg';
-
-export const VISUAL_ASSESSMENT_QUESTIONS: VisualQuestion[] = [
-  {
-    id: 'vq_motive',
-    prompt: 'ما الدافع الأعمق الذي يشدّك نحو التغيير اليوم؟',
-    helper: 'اختر الإجابة الأقرب لما تشعر به في داخلك الآن',
-    options: [
-      {
-        id: 'motive_dawn',
-        title: 'بداية جديدة وأفق مختلف',
-        subtitle: 'أريد طيّ صفحة الماضي وفتح صفحة نقية مع نفسي.',
-        imageSrc: '/assets/aistudio/d0ce8412cbba52b43f1c81f4ac22b995_588b73db.jpg',
-        imageAlt: 'شخص يمد يده نحو شروق الشمس على البحر',
-        archetypeTag: 'الباحث عن الفجر الجديد',
-      },
-      {
-        id: 'motive_freedom',
-        title: 'استعادة الحرية والانطلاق',
-        subtitle: 'أريد التحرر من قيد العادة والشعور بخفة الروح وصفاء الذهن.',
-        imageSrc: '/assets/aistudio/60ea100e2f69141ae1915e8a37624818_fb2ed2eb.jpg',
-        imageAlt: 'شخص يفتح ذراعيه نحو السماء والغيوم الصافية',
-        archetypeTag: 'طالب الحرية الصافية',
-      },
-      {
-        id: 'motive_willpower',
-        title: 'إثبات القوة وكسر القيود',
-        subtitle: 'أريد أن أستعيد زمام قراري وأثبت لنفسي أنني أقوى من الاندفاع.',
-        imageSrc: '/assets/aistudio/ac65fba5496c3c230bb12b48f57ad333__1__74af56f1.jpg',
-        imageAlt: 'قبضة يد مرفوعة بقوة نحو السماء المضيئة',
-        archetypeTag: 'صاحب العزيمة الحاسمة',
-      },
-    ],
-  },
-  {
-    id: 'vq_struggle',
-    prompt: 'كيف تتعامل مع نفسك عندما تمر بلحظة ضعف أو تعثّر؟',
-    helper: 'طريقة نظرتك للحظة الصعبة تحدد سرعة عودتك للمسار',
-    options: [
-      {
-        id: 'struggle_resilience',
-        title: 'أصمد رغم الندوب والتعب',
-        subtitle: 'الجروح القديمة لا توقفني؛ أبتسم للمعركة وأنهض من جديد.',
-        imageSrc: '/assets/aistudio/ccca9b6ae3a94c94a3e5a623ca5784b8_c927a871.jpg',
-        imageAlt: 'رسم أبيض وأسود لمحارب صامد بابتسامة هادئة رغم الجروح',
-        archetypeTag: 'المحارب الصامد',
-      },
-      {
-        id: 'struggle_calm',
-        title: 'أهدّئ نفسي بالتأمل والسكينة',
-        subtitle: 'أبتعد عن الضجيج وأمنح عقلي دقائق من الهدوء قبل أي تصرف.',
-        imageSrc: '/assets/aistudio/2ea4b22326a09c75f8d1977b795ad39b_ec30dbc7.jpg',
-        imageAlt: 'شاب يجلس بهدوء وتأمل وسط حقل أخضر مضاء بالشمس',
-        archetypeTag: 'المتزن الهادئ',
-      },
-      {
-        id: 'struggle_hope',
-        title: 'أذكر نفسي أن الغد يحمل أملاً',
-        subtitle: 'أؤمن أن العاصفة مؤقتة وأن شمس الغد تستحق الصبر عليها.',
-        imageSrc: '/assets/aistudio/cbda8702cea449e398c11409dee6c415_caf1171c.jpg',
-        imageAlt: 'شخص يقف أمام تلال ذهبية مشرقة عند الشروق',
-        archetypeTag: 'المبصر للأمل',
-      },
-    ],
-  },
-  {
-    id: 'vq_environment',
-    prompt: 'ما الأسلوب العملي الذي ينجح معك أكثر في كسر الرغبة؟',
-    helper: 'اختر الطريقة التي تشعر أنها تناسب طبيعتك اليومية',
-    options: [
-      {
-        id: 'env_walk',
-        title: 'الحركة والخروج من الغرفة فوراً',
-        subtitle: 'المشي وتغيير المكان يقطعان حلقة التفكير السلبية بسرعة.',
-        imageSrc: '/assets/aistudio/ba2781b4209106fb83d30b37f1130d35_9f34540c.jpg',
-        imageAlt: 'رجل يمشي بثبات وسط حقول القمح الذهبية',
-        archetypeTag: 'السائر بثبات',
-      },
-      {
-        id: 'env_reflection',
-        title: 'التنفس العميق والبعد عن الشاشة',
-        subtitle: 'ترك الهاتف جانباً والجلوس بتركيز هادئ لبضع دقائق.',
-        imageSrc: '/assets/aistudio/2ea4b22326a09c75f8d1977b795ad39b_ec30dbc7.jpg',
-        imageAlt: 'شخص يتأمل بهدوء في الطبيعة',
-        archetypeTag: 'المتزن الهادئ',
-      },
-      {
-        id: 'env_action',
-        title: 'مواجهة فورية وتمرين بدني سريع',
-        subtitle: 'تحويل التوتر إلى تمرين ضغط أو تحدٍ بدني يفرغ الطاقة.',
-        imageSrc: '/assets/aistudio/ac65fba5496c3c230bb12b48f57ad333__1__74af56f1.jpg',
-        imageAlt: 'قبضة عزيمة مرفوعة نحو الضوء',
-        archetypeTag: 'صاحب العزيمة الحاسمة',
-      },
-    ],
-  },
-  {
-    id: 'vq_vision',
-    prompt: 'أي صورة تمثّل النسخة التي تريد الوصول إليها بعد ٩٠ يوماً؟',
-    helper: 'تصورك للنتيجة يثبت قدميك في اللحظات الصعبة',
-    options: [
-      {
-        id: 'vision_steady',
-        title: 'واثق، متزن، وهادئ الخطى',
-        subtitle: 'أمشي في طريقي بوقار وهدوء دون أن تهزّني الإغراءات العابرة.',
-        imageSrc: '/assets/aistudio/ba2781b4209106fb83d30b37f1130d35_9f34540c.jpg',
-        imageAlt: 'رجل يسير بثبات في حقل ذهبي تحت سماء صافية',
-        archetypeTag: 'السائر بثبات',
-      },
-      {
-        id: 'vision_free',
-        title: 'حرّ العقل وصافي البصيرة',
-        subtitle: 'طاقتي متفرغة لأهدافي ودراستي وعلاقاتي الحقيقية.',
-        imageSrc: '/assets/aistudio/60ea100e2f69141ae1915e8a37624818_fb2ed2eb.jpg',
-        imageAlt: 'شاب يرفع ذراعيه بحرية فوق السحب',
-        archetypeTag: 'طالب الحرية الصافية',
-      },
-      {
-        id: 'vision_warrior',
-        title: 'أقوى من ذي قبل وأعرف نفسي',
-        subtitle: 'تجاوزت الاختبار الصعب وصارت عندي مناعة حقيقية ضد المحفزات.',
-        imageSrc: '/assets/aistudio/ccca9b6ae3a94c94a3e5a623ca5784b8_c927a871.jpg',
-        imageAlt: 'محارب هادئ يبتسم بثقة رغم ما مر به',
-        archetypeTag: 'المحارب الصامد',
-      },
-      {
-        id: 'vision_sunrise',
-        title: 'صباحات مشرقة بلا ندم',
-        subtitle: 'أستيقظ كل يوم بضمير مرتاح ونظرة فخورة إلى مستقبلي.',
-        imageSrc: '/assets/aistudio/cbda8702cea449e398c11409dee6c415_caf1171c.jpg',
-        imageAlt: 'رجل ينظر نحو شروق الشمس على تلال ذهبية',
-        archetypeTag: 'المبصر للأمل',
-      },
-    ],
-  },
-];
-
-export function getVisualCompassSummary(visualAnswers: Record<string, string>) {
-  const visionChoice = VISUAL_ASSESSMENT_QUESTIONS[3].options.find(
-    (o) => o.id === visualAnswers.vq_vision
-  );
-  const motiveChoice = VISUAL_ASSESSMENT_QUESTIONS[0].options.find(
-    (o) => o.id === visualAnswers.vq_motive
-  );
-  const struggleChoice = VISUAL_ASSESSMENT_QUESTIONS[1].options.find(
-    (o) => o.id === visualAnswers.vq_struggle
-  );
-  const envChoice = VISUAL_ASSESSMENT_QUESTIONS[2].options.find(
-    (o) => o.id === visualAnswers.vq_environment
-  );
-
-  const featuredOption = visionChoice ?? motiveChoice ?? struggleChoice ?? envChoice ?? null;
-  const answeredCount = VISUAL_ASSESSMENT_QUESTIONS.filter(
-    (q) => Boolean(visualAnswers[q.id])
-  ).length;
-
-  return {
-    answeredCount,
-    totalCount: VISUAL_ASSESSMENT_QUESTIONS.length,
-    isComplete: answeredCount === VISUAL_ASSESSMENT_QUESTIONS.length,
-    featuredOption,
-    choices: [
-      { label: 'الدافع', option: motiveChoice },
-      { label: 'عند التعثّر', option: struggleChoice },
-      { label: 'أسلوب المقاومة', option: envChoice },
-      { label: 'رؤيتك بعد ٩٠ يوماً', option: visionChoice },
-    ].filter((item) => Boolean(item.option)),
-  };
-}
 
 export const DISCOVERY_METHODS: string[] = [
   'الإنترنت والتصفّح',
@@ -455,8 +286,8 @@ export const WEAKNESS_PLANS: WeaknessPlan[] = [
 ];
 
 export const FEATURED_RECOVERY_QUOTE = {
-  text: 'من يريد خياطة الجرح عليه تحمل وخز الإبرة، للتعافي ثمن.',
-  author: 'جليل خزعل',
+  text: 'على الإنسان أن تكون لديه إرادة الوصول كي يصل',
+  author: 'القبطان جون سيلفر',
 };
 
 export interface DailyQuotesPair {
@@ -466,7 +297,7 @@ export interface DailyQuotesPair {
 
 const DAILY_QUOTES_BY_DAY: DailyQuotesPair[] = [
   {
-    mental: 'من يريد خياطة الجرح عليه تحمل وخز الإبرة، للتعافي ثمن. — جليل خزعل',
+    mental: 'على الإنسان أن تكون لديه إرادة الوصول كي يصل — القبطان جون سيلفر',
     focus: 'اليوم الأول هو أصعب خطوة لأنك كسرت التردد وبدأت فعلاً؛ امنح نفسك بداية هادئة.',
   },
   {

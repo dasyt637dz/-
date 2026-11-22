@@ -2,7 +2,6 @@ import {
   Check,
   Compass,
   HandHeart,
-  HeartHandshake,
   Pause,
   Play,
   RotateCcw,
@@ -17,7 +16,6 @@ import { FEATURED_RECOVERY_QUOTE, URGE_INTERRUPT_ACTIONS } from '../data/recover
 interface UrgeSOSViewProps {
   personalReasons: string[];
   onWaveSurvived: (triggerLabel?: string) => void;
-  onOpenCompanion?: () => void;
 }
 
 type BreathMode = 'box' | 'calm478';
@@ -151,7 +149,6 @@ const DELAY_PRESETS = [
 export function UrgeSOSView({
   personalReasons,
   onWaveSurvived,
-  onOpenCompanion,
 }: UrgeSOSViewProps) {
   const [selectedTriggerId, setSelectedTriggerId] = useState<string | null>(null);
 
@@ -282,16 +279,6 @@ export function UrgeSOSView({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            {onOpenCompanion && (
-              <button
-                type="button"
-                onClick={onOpenCompanion}
-                className="inline-flex items-center justify-center gap-2 min-h-[48px] px-4 py-3 rounded-xl bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] hover:border-[#C98F0A] text-[#1C2912] dark:text-[#F3F6E9] text-sm font-medium whitespace-nowrap cursor-pointer transition-colors"
-              >
-                <HeartHandshake className="w-4 h-4 text-[#C98F0A] dark:text-[#ECC93B] shrink-0" aria-hidden="true" />
-                <span>تحدث مع أنيس</span>
-              </button>
-            )}
             <button
               type="button"
               onClick={handleSurvived}
@@ -806,9 +793,11 @@ export function UrgeSOSView({
               <p className="text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9] leading-relaxed">
                 «{FEATURED_RECOVERY_QUOTE.text}»
               </p>
-              <footer className="text-xs text-[#9A6B06] dark:text-[#ECC93B] mt-1">
-                — {FEATURED_RECOVERY_QUOTE.author}
-              </footer>
+              {FEATURED_RECOVERY_QUOTE.author && (
+                <footer className="text-xs text-[#9A6B06] dark:text-[#ECC93B] mt-1">
+                  — {FEATURED_RECOVERY_QUOTE.author}
+                </footer>
+              )}
             </blockquote>
           </section>
         </div>

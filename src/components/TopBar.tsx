@@ -10,7 +10,6 @@ interface TopBarProps {
 const NAV_ITEMS: { id: NavTab; label: string }[] = [
   { id: 'dashboard', label: 'الرئيسية' },
   { id: 'guide', label: 'دليل المحارب' },
-  { id: 'companion', label: 'رفيق الأُنس' },
   { id: 'journal', label: 'اللحظات الصعبة' },
   { id: 'habits', label: 'العادات والحماية' },
   { id: 'privacy', label: 'الإعدادات' },
