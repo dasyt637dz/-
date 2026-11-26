@@ -1,10 +1,12 @@
 import { ShieldAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { DailyCheckIn, NavTab } from '../types/recovery';
+import { getTranslations } from '../i18n/translations';
+import { AppLanguage, DailyCheckIn, NavTab } from '../types/recovery';
 
 interface DailyCheckInCardProps {
   todayKey: string;
   todayCheckIn?: DailyCheckIn;
+  language: AppLanguage;
   onSaveCheckIn: (payload: {
     mood: number;
     urgeLevel: number;
@@ -44,9 +46,11 @@ const QUICK_TAGS = [
 export function DailyCheckInCard({
   todayKey,
   todayCheckIn,
+  language,
   onSaveCheckIn,
   onNavigate,
 }: DailyCheckInCardProps) {
+  const t = getTranslations(language);
   const isAlreadyCheckedInToday = Boolean(todayCheckIn?.checkedInAt);
 
   const [mood, setMood] = useState<number>(todayCheckIn?.mood ?? 4);
@@ -94,10 +98,10 @@ export function DailyCheckInCard({
           id="checkin-heading"
           className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
         >
-          تقييم اليوم السريع
+          {t.quickCheckInTitle}
         </h2>
         <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-          سجّل حالتك في ثوانٍ لمتابعة مؤشرات تعافيك
+          {t.quickCheckInSub}
         </p>
       </div>
 
@@ -105,7 +109,7 @@ export function DailyCheckInCard({
           {/* Mood 1-5 with clear labels */}
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">المزاج</span>
+              <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">{t.moodLabel}</span>
               <span className="font-medium text-[#9A6B06] dark:text-[#ECC93B] tabular-nums">
                 {activeMoodInfo.label} ({mood} / ٥)
               </span>
@@ -139,7 +143,7 @@ export function DailyCheckInCard({
           {/* Urge Level 1-5 with semantic color cue */}
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">شدة الرغبة</span>
+              <span className="font-medium text-[#1C2912] dark:text-[#F3F6E9]">{t.urgeLabel}</span>
               <span
                 className={`font-medium tabular-nums ${
                   urgeLevel >= 4
@@ -241,7 +245,7 @@ export function DailyCheckInCard({
                 className="min-h-[34px] px-3 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>طوارئ الآن</span>
+                <span>{t.emergencyLabel}</span>
               </button>
             </div>
           )}
@@ -250,7 +254,7 @@ export function DailyCheckInCard({
             type="submit"
             className="w-full min-h-[42px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
           >
-            حفظ تقييم اليوم
+            {t.saveCheckInBtn}
           </button>
         </form>
     </section>

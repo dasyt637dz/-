@@ -1,21 +1,24 @@
 import { ShieldAlert } from 'lucide-react';
-import { NavTab } from '../types/recovery';
+import { getTranslations } from '../i18n/translations';
+import { AppLanguage, NavTab } from '../types/recovery';
 import { SomoudEmblem } from './SomoudEmblem';
 
 interface TopBarProps {
   activeTab: NavTab;
+  language: AppLanguage;
   onSelectTab: (tab: NavTab) => void;
 }
 
-const NAV_ITEMS: { id: NavTab; label: string }[] = [
-  { id: 'dashboard', label: 'الرئيسية' },
-  { id: 'guide', label: 'دليل المحارب' },
-  { id: 'journal', label: 'اللحظات الصعبة' },
-  { id: 'habits', label: 'العادات والحماية' },
-  { id: 'privacy', label: 'الإعدادات' },
-];
+export function TopBar({ activeTab, language, onSelectTab }: TopBarProps) {
+  const t = getTranslations(language);
 
-export function TopBar({ activeTab, onSelectTab }: TopBarProps) {
+  const navItems: { id: NavTab; label: string }[] = [
+    { id: 'dashboard', label: t.navDashboard },
+    { id: 'guide', label: t.navGuide },
+    { id: 'habits', label: t.navHabits },
+    { id: 'privacy', label: t.navSettings },
+  ];
+
   return (
     <header className="sticky top-0 z-30 h-14 bg-[#F4F6E8]/90 dark:bg-[#11180E]/90 backdrop-blur-md border-b border-[#D5DEC0] dark:border-[#2C3B24]">
       <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-8">
@@ -27,13 +30,13 @@ export function TopBar({ activeTab, onSelectTab }: TopBarProps) {
         >
           <SomoudEmblem size="sm" />
           <span className="font-display text-xl font-bold tracking-tight text-[#1C2912] dark:text-[#F3F6E9]">
-            صمود
+            {t.brandName}
           </span>
         </button>
 
-        {/* Zone 2: Clean single-line text nav links */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="التنقل الرئيسي">
-          {NAV_ITEMS.map((item) => {
+        {/* Zone 2: Clean single-line text nav links (Journal removed) */}
+        <nav className="hidden md:flex items-center gap-6" aria-label={t.navDashboard}>
+          {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
@@ -58,7 +61,7 @@ export function TopBar({ activeTab, onSelectTab }: TopBarProps) {
           })}
         </nav>
 
-        {/* Zone 3: Single primary action */}
+        {/* Zone 3: Single primary action (Emergency Mode) */}
         <div className="flex items-center shrink-0">
           <button
             type="button"
@@ -70,7 +73,7 @@ export function TopBar({ activeTab, onSelectTab }: TopBarProps) {
             }`}
           >
             <ShieldAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span>أشعر برغبة الآن</span>
+            <span>{t.emergencyLabel}</span>
           </button>
         </div>
       </div>

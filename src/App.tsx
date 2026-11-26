@@ -1,9 +1,9 @@
 import { Analytics } from '@vercel/analytics/react';
 import { Bell, Lock, Moon, Sun, X } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AchievementAlert, AchievementBanner } from './components/AchievementBanner';
 import { DashboardView } from './components/DashboardView';
 import { HabitsShieldView } from './components/HabitsShieldView';
-import { JournalView } from './components/JournalView';
 import { MobileNav } from './components/MobileNav';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OnboardingScreen } from './components/OnboardingScreen';
@@ -16,8 +16,10 @@ import { SteadfastCheckBanner } from './components/SteadfastCheckBanner';
 import { TopBar } from './components/TopBar';
 import { UrgeSOSView } from './components/UrgeSOSView';
 import { WarriorGuideView } from './components/WarriorGuideView';
-import { useRecoveryStore } from './hooks/useRecoveryStore';
+import { getStreakTitleInfo } from './data/recoveryContent';
+import { getStreakMetrics, useRecoveryStore } from './hooks/useRecoveryStore';
 import { useSpiritualReminders } from './hooks/useSpiritualReminders';
+import { getTranslations } from './i18n/translations';
 import { NavTab, TimeOfDay } from './types/recovery';
 
 function inferCurrentTimeOfDay(): TimeOfDay {
@@ -33,6 +35,8 @@ export default function App() {
     state,
     toggleTheme,
     setTheme,
+    setLanguage,
+    markAchievementCelebrated,
     saveOnboarding,
     setWeakness,
     setWeaknessCustomNote,
@@ -40,7 +44,6 @@ export default function App() {
     setStreakStartDate,
     resetStreakExplicit,
     addJournalEntry,
-    deleteJournalEntry,
     saveDailyCheckIn,
     toggleHabitToday,
     addCustomHabit,
@@ -56,10 +59,62 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isLocked, setIsLocked] = useState<boolean>(() => Boolean(state.pinCode));
   const [bgImgFailed, setBgImgFailed] = useState(false);
+  const [achievementAlert, setAchievementAlert] = useState<AchievementAlert | null>(null);
+
+  const t = getTranslations(state.language);
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false);
   }, []);
+
+  useEffect(() => {
+    if (showSplash || !state.onboarding.completed || (isLocked && state.pinCode)) {
+      return;
+    }
+
+    const checkAchievements = () => {
+      const { days } = getStreakMetrics(state.streakStartedAt);
+      const cups = Math.min(10, Math.floor(days / 3));
+      const titleDays = getStreakTitleInfo(days).current.days;
+
+      if (state.lastCelebratedTitleDays === null || titleDays > state.lastCelebratedTitleDays) {
+        setAchievementAlert({
+          id: `title_${titleDays}_${Date.now()}`,
+          kind: 'title',
+          titleDays,
+          cups,
+        });
+        markAchievementCelebrated(titleDays, cups);
+      } else if (cups > state.lastCelebratedCups) {
+        setAchievementAlert({
+          id: `cup_${cups}_${Date.now()}`,
+          kind: 'cup',
+          titleDays,
+          cups,
+        });
+        markAchievementCelebrated(titleDays, cups);
+      }
+    };
+
+    checkAchievements();
+    const timer = window.setInterval(checkAchievements, 15000);
+    return () => window.clearInterval(timer);
+  }, [
+    showSplash,
+    state.onboarding.completed,
+    isLocked,
+    state.pinCode,
+    state.streakStartedAt,
+    state.lastCelebratedTitleDays,
+    state.lastCelebratedCups,
+    markAchievementCelebrated,
+  ]);
+
+  useEffect(() => {
+    if (!achievementAlert) return;
+    const timeout = window.setTimeout(() => setAchievementAlert(null), 6500);
+    return () => window.clearTimeout(timeout);
+  }, [achievementAlert]);
 
   const {
     salawatVisible,
@@ -149,7 +204,12 @@ export default function App() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {salawatBannerNode}
-        <TopBar activeTab={activeTab} onSelectTab={setActiveTab} />
+        <AchievementBanner
+          alert={achievementAlert}
+          language={state.language}
+          onDismiss={() => setAchievementAlert(null)}
+        />
+        <TopBar activeTab={activeTab} language={state.language} onSelectTab={setActiveTab} />
 
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-12 space-y-6">
           <PWAInstallButton variant="banner" />
@@ -196,6 +256,7 @@ export default function App() {
         {activeTab === 'guide' && (
           <WarriorGuideView
             streakStartedAt={state.streakStartedAt}
+            language={state.language}
             onNavigate={setActiveTab}
           />
         )}
@@ -204,14 +265,6 @@ export default function App() {
           <UrgeSOSView
             personalReasons={state.personalReasons}
             onWaveSurvived={handleQuickVictory}
-          />
-        )}
-
-        {activeTab === 'journal' && (
-          <JournalView
-            journal={state.journal}
-            onAddEntry={addJournalEntry}
-            onDeleteEntry={deleteJournalEntry}
           />
         )}
 
@@ -230,6 +283,7 @@ export default function App() {
             state={state}
             notificationPermission={permissionStatus}
             onSetTheme={setTheme}
+            onSetLanguage={setLanguage}
             onSetStartDate={setStreakStartDate}
             onSetPin={setPinCode}
             onLockNow={() => setIsLocked(true)}
@@ -247,7 +301,7 @@ export default function App() {
 
         <footer className="hidden md:block bg-[#FCFDF7]/85 dark:bg-[#192315]/85 backdrop-blur-md border-t border-[#D5DEC0] dark:border-[#2C3B24] py-5">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 text-xs text-[#556442] dark:text-[#A2B193]">
-            <span>صمود · بياناتك محفوظة محلياً على جهازك فقط بخصوصية كاملة</span>
+            <span>{t.footerPrivacyNote}</span>
             <div className="flex items-center gap-4">
               {state.pinCode && (
                 <button
@@ -256,7 +310,7 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 hover:text-[#1C2912] dark:hover:text-[#F3F6E9] cursor-pointer"
                 >
                   <Lock className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>قفل التطبيق</span>
+                  <span>{t.lockApp}</span>
                 </button>
               )}
               <button
@@ -267,12 +321,12 @@ export default function App() {
                 {state.theme === 'dark' ? (
                   <>
                     <Sun className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>الوضع النهاري</span>
+                    <span>{t.lightMode}</span>
                   </>
                 ) : (
                   <>
                     <Moon className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>الوضع الليلي</span>
+                    <span>{t.darkMode}</span>
                   </>
                 )}
               </button>
@@ -280,7 +334,7 @@ export default function App() {
           </div>
         </footer>
 
-        <MobileNav activeTab={activeTab} onSelectTab={setActiveTab} />
+        <MobileNav activeTab={activeTab} language={state.language} onSelectTab={setActiveTab} />
         <SteadfastCheckBanner
           visible={steadfastPromptVisible}
           onConfirmSteadfast={() => {}}

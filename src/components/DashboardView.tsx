@@ -12,14 +12,14 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   FEATURED_RECOVERY_QUOTE,
   getDailyQuotesForDay,
-  getStreakTitleInfo,
   RECOVERY_MILESTONES,
   WEAKNESS_PLANS,
 } from '../data/recoveryContent';
 import { getLocalDateKey, getStreakMetrics } from '../hooks/useRecoveryStore';
+import { getLocalizedStreakTitle, getTranslations } from '../i18n/translations';
 import { NavTab, RecoveryState, WeaknessId } from '../types/recovery';
 import { DailyCheckInCard } from './DailyCheckInCard';
-import { BodyFillFigure, BrainFillFigure } from './RecoveryFillFigures';
+import { BrainFillFigure } from './RecoveryFillFigures';
 
 interface DashboardViewProps {
   state: RecoveryState;
@@ -39,11 +39,12 @@ interface DashboardViewProps {
 
 type BottomSectionTab = 'weakness' | 'calendar';
 
-function getRecoveryStatusLabel(pct: number): string {
-  if (pct < 20) return 'بداية التوازن';
-  if (pct < 45) return 'في تحسّن';
-  if (pct < 75) return 'تعافٍ ثابت';
-  return 'قوة واستقرار';
+function getRecoveryStatusLabel(pct: number, lang: RecoveryState['language']): string {
+  const t = getTranslations(lang);
+  if (pct < 20) return t.statusStart;
+  if (pct < 45) return t.statusImproving;
+  if (pct < 75) return t.statusSteady;
+  return t.statusStrong;
 }
 
 function getDailyHourAdvice(hour: number): string {
@@ -74,6 +75,7 @@ export function DashboardView({
   const [selectedMilestoneDays, setSelectedMilestoneDays] = useState<number>(3);
   const [victoryFeedback, setVictoryFeedback] = useState(false);
   const [showAllSolutions, setShowAllSolutions] = useState(false);
+  const [showWeaknessOptions, setShowWeaknessOptions] = useState(false);
   const [confirmFailReset, setConfirmFailReset] = useState(false);
 
   const nowDate = new Date(nowMs);
@@ -95,7 +97,8 @@ export function DashboardView({
 
   const dailyHourAdvice = getDailyHourAdvice(nowDate.getHours());
 
-  const titleInfo = getStreakTitleInfo(duration.days);
+  const t = getTranslations(state.language);
+  const currentTitleLabel = getLocalizedStreakTitle(duration.days, state.language);
   const earnedCups = Math.min(10, Math.floor(duration.days / 3));
   const earnedCrowns = Math.min(6, Math.floor(duration.days / 5));
 
@@ -221,12 +224,12 @@ export function DashboardView({
     <div className="space-y-6">
       {/* Quote + Daily Guidance Strip over Meadow Background */}
       <section
-        aria-label="المقولة اليومية وتوجيه الساعة"
+        aria-label={t.dayOfJourney}
         className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-5 sm:p-6 space-y-3"
       >
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#556442] dark:text-[#A2B193]">
           <span className="text-[#9A6B06] dark:text-[#ECC93B] tabular-nums">
-            اليوم {currentDayNumber} من رحلتك · الهدف القادم: {nextMilestone.title} ({nextMilestone.days} أيام)
+            {t.dayOfJourney} {currentDayNumber} · {t.nextGoal}: {nextMilestone.title} ({nextMilestone.days} {t.daysWord})
           </span>
           <span>{dailyHourAdvice}</span>
         </div>
@@ -244,13 +247,13 @@ export function DashboardView({
       </section>
 
       {/* BAND 1: 2-Column Symmetrical KPI Strip */}
-      <section aria-label="ملخص الصمود اليومي">
+      <section aria-label={t.continuousStreak}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
           {/* KPI 1: Current Streak & 30-Day Challenge Combined */}
           <div className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-5 flex flex-col justify-between gap-4">
             <div className="flex items-center justify-between gap-2 text-xs font-medium text-[#556442] dark:text-[#A2B193]">
-              <span>عداد الصمود المستمر</span>
-              <span className="tabular-nums">تحدي ٣٠ يوماً · {thirtyDayPct}%</span>
+              <span>{t.continuousStreak}</span>
+              <span className="tabular-nums">{t.thirtyDayChallenge} · {thirtyDayPct}%</span>
             </div>
 
             <div className="grid grid-cols-2 gap-4 items-end">
@@ -259,25 +262,25 @@ export function DashboardView({
                   <span className="font-mono-num text-3xl font-bold text-[#9A6B06] dark:text-[#ECC93B]">
                     {duration.days}
                   </span>
-                  <span className="text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9]">يوم</span>
+                  <span className="text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9]">{t.dayWord}</span>
                 </div>
                 <div className="mt-1.5 font-mono-num text-xs text-[#556442] dark:text-[#A2B193]">
-                  {String(duration.hours).padStart(2, '0')}س : {String(duration.minutes).padStart(2, '0')}د :{' '}
-                  {String(duration.seconds).padStart(2, '0')}ث
+                  {String(duration.hours).padStart(2, '0')}h : {String(duration.minutes).padStart(2, '0')}m :{' '}
+                  {String(duration.seconds).padStart(2, '0')}s
                 </div>
               </div>
 
-              <div className="pr-4 border-r border-[#D5DEC0] dark:border-[#2C3B24]">
+              <div className="ps-4 border-s border-[#D5DEC0] dark:border-[#2C3B24]">
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-mono-num text-3xl font-bold text-[#1C2912] dark:text-[#F3F6E9]">
                     {completedThirtyDays}
                   </span>
-                  <span className="text-sm text-[#556442] dark:text-[#A2B193] font-mono-num">/ ٣٠</span>
+                  <span className="text-sm text-[#556442] dark:text-[#A2B193] font-mono-num">/ 30</span>
                 </div>
                 <div className="mt-1.5 text-xs text-[#556442] dark:text-[#A2B193] tabular-nums">
                   {isThirtyCompleted
-                    ? 'أتممت الشهر الأول بنجاح'
-                    : `بقي ${remainingThirtyDays} يوماً لإتمام التحدي`}
+                    ? t.completedMonth
+                    : `${t.daysLeftPrefix ? `${t.daysLeftPrefix} ` : ''}${remainingThirtyDays} ${t.daysLeftSuffix}`}
                 </div>
               </div>
             </div>
@@ -286,16 +289,16 @@ export function DashboardView({
           {/* KPI 2: Personal Best & Victories */}
           <div className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-5 flex flex-col justify-between">
             <div className="text-xs font-medium text-[#556442] dark:text-[#A2B193]">
-              أطول سلسلة والانتصارات
+              {t.bestStreakAndVictories}
             </div>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="font-mono-num text-3xl font-bold text-[#1C2912] dark:text-[#F3F6E9]">
                 {bestDays}
               </span>
-              <span className="text-sm text-[#556442] dark:text-[#A2B193]">يوم قياسي</span>
+              <span className="text-sm text-[#556442] dark:text-[#A2B193]">{t.recordDays}</span>
             </div>
             <div className="mt-2 text-xs text-[#556442] dark:text-[#A2B193] tabular-nums">
-              لقبك: <span className="font-semibold text-[#9A6B06] dark:text-[#ECC93B]">{titleInfo.current.title}</span> · انتصارات: {victoriesCount}
+              {t.yourTitle}: <span className="font-semibold text-[#9A6B06] dark:text-[#ECC93B]">{currentTitleLabel}</span> · {t.victories}: {victoriesCount}
             </div>
           </div>
         </div>
@@ -323,23 +326,23 @@ export function DashboardView({
                   id="thirty-day-heading"
                   className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
                 >
-                  {isThirtyCompleted ? 'أتممت ٣٠ يوماً — محارب حقيقي!' : 'شبكة ٣٠ يوماً من الصمود'}
+                  {isThirtyCompleted ? t.thirtyDayGridDoneTitle : t.thirtyDayGridTitle}
                 </h2>
                 <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-                  لقبك الحالي:{' '}
+                  {t.currentTitleLabel}:{' '}
                   <span className="font-semibold text-[#9A6B06] dark:text-[#ECC93B]">
-                    {titleInfo.current.title}
+                    {currentTitleLabel}
                   </span>
                 </p>
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold">
                 <span className="inline-flex items-center gap-1 text-[#9A6B06] dark:text-[#ECC93B] tabular-nums">
                   <Trophy className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span>{earnedCups} / ١٠</span>
+                  <span>{earnedCups} / 10</span>
                 </span>
                 <span className="inline-flex items-center gap-1 text-[#9A6B06] dark:text-[#ECC93B] tabular-nums">
                   <Crown className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                  <span>{earnedCrowns} / ٦</span>
+                  <span>{earnedCrowns} / 6</span>
                 </span>
                 <span className="font-mono-num text-[#9A6B06] dark:text-[#ECC93B]">
                   {thirtyDayPct}%
@@ -408,7 +411,7 @@ export function DashboardView({
               })}
             </div>
 
-            {/* Unified Action Bar (Victory + SOS + Explicit Red Reset) */}
+            {/* Unified Action Bar (Victory + Emergency + Explicit Red Reset) */}
             <div className="pt-4 border-t border-[#D5DEC0] dark:border-[#2C3B24] space-y-3">
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
@@ -417,7 +420,7 @@ export function DashboardView({
                   className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-sm font-medium whitespace-nowrap cursor-pointer transition-colors"
                 >
                   <Trophy className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  <span>{victoryFeedback ? 'تم تسجيل الانتصار' : 'تغلبت على رغبة الآن'}</span>
+                  <span>{victoryFeedback ? t.victoryRecorded : t.overcameUrgeBtn}</span>
                 </button>
 
                 <button
@@ -426,17 +429,17 @@ export function DashboardView({
                   className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl border border-[#D5DEC0] dark:border-[#2C3B24] bg-[#F4F6E8] dark:bg-[#222F1C] hover:bg-[#E5ECD0] dark:hover:bg-[#2B3B24] text-[#1C2912] dark:text-[#F3F6E9] text-sm font-medium whitespace-nowrap cursor-pointer transition-colors"
                 >
                   <ShieldAlert className="w-4 h-4 shrink-0 text-[#C98F0A] dark:text-[#ECC93B]" aria-hidden="true" />
-                  <span>بروتوكول الطوارئ</span>
+                  <span>{t.emergencyLabel}</span>
                 </button>
 
                 {!confirmFailReset && (
                   <button
                     type="button"
                     onClick={() => setConfirmFailReset(true)}
-                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white text-sm font-medium whitespace-nowrap cursor-pointer transition-colors sm:mr-auto"
+                    className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white text-sm font-medium whitespace-nowrap cursor-pointer transition-colors sm:ms-auto"
                   >
                     <RotateCcw className="w-4 h-4 shrink-0" aria-hidden="true" />
-                    <span>لقد فشلت، أعد</span>
+                    <span>{t.resetCounterBtn}</span>
                   </button>
                 )}
               </div>
@@ -445,10 +448,10 @@ export function DashboardView({
                 <div className="p-4 rounded-xl bg-[#DC2626]/10 border border-[#DC2626]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-[#DC2626] dark:text-[#FCA5A5]">
-                      هل تريد فعلاً إعادة العدّاد من الصفر؟
+                      {t.confirmResetTitle}
                     </div>
                     <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-                      يُحفظ رقمك القياسي السابق ويُسجّل اليوم كيوم عودة دون حذف ملاحظاتك.
+                      {t.confirmResetDesc}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -460,14 +463,14 @@ export function DashboardView({
                       }}
                       className="min-h-[40px] px-3.5 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-semibold whitespace-nowrap cursor-pointer"
                     >
-                      نعم، أعد من الصفر
+                      {t.confirmResetYes}
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmFailReset(false)}
                       className="min-h-[40px] px-3.5 rounded-lg bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] text-[#1C2912] dark:text-[#F3F6E9] text-xs font-semibold whitespace-nowrap cursor-pointer"
                     >
-                      لا، أكمل صمودي
+                      {t.confirmResetNo}
                     </button>
                   </div>
                 </div>
@@ -480,6 +483,7 @@ export function DashboardView({
               <DailyCheckInCard
                 todayKey={todayKey}
                 todayCheckIn={todayCheckIn}
+                language={state.language}
                 onSaveCheckIn={onSaveCheckIn}
                 onNavigate={onNavigate}
               />
@@ -487,7 +491,7 @@ export function DashboardView({
           )}
         </div>
 
-        {/* Two Symmetrical Recovery Figures: Brain (Mental & Emotional) + Person (Focus & Body) */}
+        {/* Two Symmetrical Recovery Figures: Brain (Mental & Emotional) + Strong Man (Focus & Body) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           {/* Capsule 1: Mental & Emotional Health — Filling Brain */}
           <section
@@ -499,7 +503,7 @@ export function DashboardView({
                 id="brain-health-heading"
                 className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
               >
-                الصحة الذهنية والنفسية
+                {t.mentalHealthTitle}
               </h2>
               <span className="font-mono-num text-sm font-bold text-[#9A6B06] dark:text-[#ECC93B]">
                 {brainFillPct}%
@@ -509,28 +513,28 @@ export function DashboardView({
             <div className="flex flex-col sm:flex-row items-center gap-5">
               <BrainFillFigure
                 percentage={brainFillPct}
-                ariaLabel={`امتلاء الدماغ للصحة الذهنية والنفسية بنسبة ${brainFillPct} في المئة`}
+                ariaLabel={`${t.mentalHealthTitle} ${brainFillPct}%`}
               />
 
-              <div className="flex-1 w-full space-y-3 text-center sm:text-right">
+              <div className="flex-1 w-full space-y-3 text-center sm:text-start">
                 <div>
                   <div className="text-xs text-[#556442] dark:text-[#A2B193]">
-                    حالة التعافي الذهني
+                    {t.mentalRecoveryStatus}
                   </div>
                   <div className="text-lg font-display font-bold text-[#9A6B06] dark:text-[#ECC93B] mt-0.5">
-                    {getRecoveryStatusLabel(brainFillPct)}
+                    {getRecoveryStatusLabel(brainFillPct, state.language)}
                   </div>
                 </div>
 
                 <div className="space-y-1.5 pt-2 border-t border-[#D5DEC0] dark:border-[#2C3B24] text-xs">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[#556442] dark:text-[#A2B193]">الصحة العقلية</span>
+                    <span className="text-[#556442] dark:text-[#A2B193]">{t.mentalHealthSub}</span>
                     <span className="font-mono-num font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
                       {mentalPct}%
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[#556442] dark:text-[#A2B193]">الصحة النفسية</span>
+                    <span className="text-[#556442] dark:text-[#A2B193]">{t.emotionalHealthSub}</span>
                     <span className="font-mono-num font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
                       {emotionalPct}%
                     </span>
@@ -540,16 +544,13 @@ export function DashboardView({
             </div>
 
             <div className="pt-3.5 border-t border-[#D5DEC0] dark:border-[#2C3B24]">
-              <div className="text-[11px] font-medium text-[#9A6B06] dark:text-[#ECC93B]">
-                عبارة اليوم {currentDayNumber} النفسية
-              </div>
-              <p className="text-xs sm:text-sm text-[#1C2912] dark:text-[#F3F6E9] mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#1C2912] dark:text-[#F3F6E9] leading-relaxed">
                 {dailyQuotes.mental}
               </p>
             </div>
           </section>
 
-          {/* Capsule 2: Focus & Physical Activity — Filling Person */}
+          {/* Capsule 2: Focus & Physical Activity */}
           <section
             aria-labelledby="body-focus-heading"
             className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6 flex flex-col justify-between space-y-5"
@@ -559,51 +560,64 @@ export function DashboardView({
                 id="body-focus-heading"
                 className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
               >
-                التركيز ونشاط الجسم
+                {t.bodyFocusTitle}
               </h2>
               <span className="font-mono-num text-sm font-bold text-[#2F6E1B] dark:text-[#65C449]">
                 {bodyFillPct}%
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-5">
-              <BodyFillFigure
-                percentage={bodyFillPct}
-                ariaLabel={`امتلاء الجسم للتركيز ونشاط الجسم بنسبة ${bodyFillPct} في المئة`}
-              />
-
-              <div className="flex-1 w-full space-y-3 text-center sm:text-right">
-                <div>
-                  <div className="text-xs text-[#556442] dark:text-[#A2B193]">
-                    حالة النشاط والتركيز
-                  </div>
-                  <div className="text-lg font-display font-bold text-[#2F6E1B] dark:text-[#65C449] mt-0.5">
-                    {getRecoveryStatusLabel(bodyFillPct)}
-                  </div>
+            <div className="flex-1 flex flex-col justify-center space-y-4">
+              <div>
+                <div className="text-xs text-[#556442] dark:text-[#A2B193]">
+                  {t.bodyFocusStatus}
                 </div>
+                <div className="text-lg font-display font-bold text-[#2F6E1B] dark:text-[#65C449] mt-0.5">
+                  {getRecoveryStatusLabel(bodyFillPct, state.language)}
+                </div>
+                <div className="mt-2.5 h-2.5 w-full rounded-full bg-[#E7EDD5] dark:bg-[#11180E] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#2F6E1B] to-[#65C449] transition-all duration-500 ease-out"
+                    style={{ width: `${bodyFillPct}%` }}
+                  />
+                </div>
+              </div>
 
-                <div className="space-y-1.5 pt-2 border-t border-[#D5DEC0] dark:border-[#2C3B24] text-xs">
+              <div className="space-y-3 pt-3 border-t border-[#D5DEC0] dark:border-[#2C3B24] text-xs">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[#556442] dark:text-[#A2B193]">التركيز</span>
+                    <span className="text-[#556442] dark:text-[#A2B193]">{t.focusSub}</span>
                     <span className="font-mono-num font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
                       {focusPct}%
                     </span>
                   </div>
+                  <div className="h-1.5 w-full rounded-full bg-[#E7EDD5] dark:bg-[#11180E] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#2F6E1B] dark:bg-[#65C449] transition-all duration-500 ease-out"
+                      style={{ width: `${focusPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[#556442] dark:text-[#A2B193]">نشاط الجسم</span>
+                    <span className="text-[#556442] dark:text-[#A2B193]">{t.bodyActivitySub}</span>
                     <span className="font-mono-num font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
                       {bodyEnergyPct}%
                     </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-[#E7EDD5] dark:bg-[#11180E] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#52B337] dark:bg-[#86EFAC] transition-all duration-500 ease-out"
+                      style={{ width: `${bodyEnergyPct}%` }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="pt-3.5 border-t border-[#D5DEC0] dark:border-[#2C3B24]">
-              <div className="text-[11px] font-medium text-[#2F6E1B] dark:text-[#65C449]">
-                عبارة اليوم {currentDayNumber} للطاقة
-              </div>
-              <p className="text-xs sm:text-sm text-[#1C2912] dark:text-[#F3F6E9] mt-1 leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#1C2912] dark:text-[#F3F6E9] leading-relaxed">
                 {dailyQuotes.focus}
               </p>
             </div>
@@ -650,51 +664,74 @@ export function DashboardView({
         {bottomTab === 'weakness' && (
           <section
             aria-labelledby="weakness-heading"
-            className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6"
+            className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-4 sm:p-5"
           >
             {!activeWeaknessPlan ? (
               <div className="space-y-4">
-                <div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2
                     id="weakness-heading"
-                    className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
+                    className="font-display text-sm sm:text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
                   >
                     ما أكثر شيء يجعلك تعود إليها؟
                   </h2>
-                  <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-1">
-                    اختر نقطة ضعفك الأساسية لنعطيك خطة يومية وحلولاً عملية مجربة تناسب حالتك
-                  </p>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {WEAKNESS_PLANS.map((plan) => (
-                    <button
-                      key={plan.id}
-                      type="button"
-                      onClick={() => onSelectWeakness(plan.id)}
-                      className="min-h-[46px] px-4 py-2.5 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] hover:border-[#C98F0A] dark:hover:border-[#ECC93B] text-right text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9] transition-colors cursor-pointer"
-                    >
-                      {plan.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="weakness-note-input"
-                    className="block text-xs font-medium text-[#556442] dark:text-[#A2B193] mb-1.5"
+                  <button
+                    type="button"
+                    aria-expanded={showWeaknessOptions}
+                    onClick={() => setShowWeaknessOptions((prev) => !prev)}
+                    className="inline-flex items-center gap-2 min-h-[40px] px-3.5 py-2 rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#E0BA22] text-white dark:text-[#11180E] text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                   >
-                    اكتب تجربتك بكلماتك (اختياري)
-                  </label>
-                  <textarea
-                    id="weakness-note-input"
-                    rows={2}
-                    value={state.weaknessCustomNote}
-                    onChange={(e) => onChangeWeaknessNote(e.target.value)}
-                    placeholder="مثال: أضعف غالباً بعد الساعة ١١ ليلاً عندما أكون متوتراً..."
-                    className="w-full p-3 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] text-sm text-[#1C2912] dark:text-[#F3F6E9] placeholder:text-[#556442] focus:outline-2 focus:outline-[#C98F0A]"
-                  />
+                    <span>{showWeaknessOptions ? 'إخفاء الخيارات' : 'عرض الخيارات'}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-150 ${
+                        showWeaknessOptions ? 'rotate-180' : ''
+                      }`}
+                      aria-hidden="true"
+                    />
+                  </button>
                 </div>
+
+                {showWeaknessOptions && (
+                  <div className="space-y-4 pt-3 border-t border-[#D5DEC0] dark:border-[#2C3B24]">
+                    <p className="text-xs text-[#556442] dark:text-[#A2B193]">
+                      اختر نقطة ضعفك الأساسية لنعطيك خطة يومية وحلولاً عملية مجربة تناسب حالتك
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {WEAKNESS_PLANS.map((plan) => (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => {
+                            onSelectWeakness(plan.id);
+                            setShowWeaknessOptions(false);
+                          }}
+                          className="min-h-[44px] px-4 py-2.5 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] hover:border-[#C98F0A] dark:hover:border-[#ECC93B] text-right text-sm font-medium text-[#1C2912] dark:text-[#F3F6E9] transition-colors cursor-pointer"
+                        >
+                          {plan.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="weakness-note-input"
+                        className="block text-xs font-medium text-[#556442] dark:text-[#A2B193] mb-1.5"
+                      >
+                        اكتب تجربتك بكلماتك (اختياري)
+                      </label>
+                      <textarea
+                        id="weakness-note-input"
+                        rows={2}
+                        value={state.weaknessCustomNote}
+                        onChange={(e) => onChangeWeaknessNote(e.target.value)}
+                        placeholder="مثال: أضعف غالباً بعد الساعة ١١ ليلاً عندما أكون متوتراً..."
+                        className="w-full p-3 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] text-sm text-[#1C2912] dark:text-[#F3F6E9] placeholder:text-[#556442] focus:outline-2 focus:outline-[#C98F0A]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-5">
@@ -716,7 +753,10 @@ export function DashboardView({
 
                   <button
                     type="button"
-                    onClick={() => onSelectWeakness(null)}
+                    onClick={() => {
+                      onSelectWeakness(null);
+                      setShowWeaknessOptions(true);
+                    }}
                     className="min-h-[40px] px-3.5 py-2 rounded-xl border border-[#D5DEC0] dark:border-[#2C3B24] text-xs font-medium text-[#556442] dark:text-[#A2B193] hover:text-[#1C2912] dark:hover:text-[#F3F6E9] whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     تغيير نقطة الضعف

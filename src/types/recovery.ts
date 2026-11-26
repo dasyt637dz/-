@@ -1,6 +1,8 @@
 export type ThemeMode = 'light' | 'dark';
 
-export type NavTab = 'dashboard' | 'guide' | 'sos' | 'journal' | 'habits' | 'privacy';
+export type AppLanguage = 'ar' | 'en' | 'fr' | 'hi' | 'fa' | 'ru';
+
+export type NavTab = 'dashboard' | 'guide' | 'sos' | 'habits' | 'privacy';
 
 export type WarriorTipCategory = 'morning' | 'free_time' | 'night' | 'mindset';
 
@@ -125,6 +127,7 @@ export interface RecoveryState {
   streakStartedAt: string; // ISO timestamp
   bestStreakSeconds: number;
   theme: ThemeMode;
+  language: AppLanguage;
   pinCode: string | null; // 4-digit PIN or null
   onboarding: OnboardingProfile;
   selectedWeakness: WeaknessId | null;
@@ -137,4 +140,6 @@ export interface RecoveryState {
   completedSafeguards: string[];
   previousStreaksDays: number[]; // track past completed streaks in days
   notifications: NotificationPreferences;
+  lastCelebratedTitleDays: number | null;
+  lastCelebratedCups: number;
 }

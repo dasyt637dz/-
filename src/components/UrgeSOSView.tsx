@@ -267,7 +267,7 @@ export function UrgeSOSView({
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C98F0A] dark:text-[#ECC93B] mb-1.5">
               <ShieldAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
-              <span>بروتوكول الإنقاذ الفوري</span>
+              <span>حالة طوارئ</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1C2912] dark:text-[#F3F6E9] text-balance">
               تنفس بهدوء — هذه الرغبة موجة مؤقتة وستمر

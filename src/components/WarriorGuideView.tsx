@@ -6,10 +6,12 @@ import {
   WARRIOR_PSYCH_STAGES,
 } from '../data/recoveryContent';
 import { getStreakMetrics } from '../hooks/useRecoveryStore';
-import { NavTab, WarriorTipCategory } from '../types/recovery';
+import { getTranslations } from '../i18n/translations';
+import { AppLanguage, NavTab, WarriorTipCategory } from '../types/recovery';
 
 interface WarriorGuideViewProps {
   streakStartedAt: string;
+  language: AppLanguage;
   onNavigate: (tab: NavTab) => void;
 }
 
@@ -23,7 +25,8 @@ const TIP_FILTERS: { id: TipFilter; label: string }[] = [
   { id: 'mindset', label: 'الذهن والتركيز' },
 ];
 
-export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideViewProps) {
+export function WarriorGuideView({ streakStartedAt, language, onNavigate }: WarriorGuideViewProps) {
+  const t = getTranslations(language);
   const currentDayNumber = useMemo(() => {
     return getStreakMetrics(streakStartedAt).days + 1;
   }, [streakStartedAt]);
@@ -40,6 +43,7 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
 
   const [selectedStageId, setSelectedStageId] = useState<string>(activeStage.id);
   const [tipFilter, setTipFilter] = useState<TipFilter>('all');
+  const [visibleTipCount, setVisibleTipCount] = useState(2);
   const [spotlightOffset, setSpotlightOffset] = useState(0);
   const [openNoteId, setOpenNoteId] = useState<string | null>(WARRIOR_PSYCH_NOTES[0].id);
 
@@ -66,10 +70,10 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
               اليوم {currentDayNumber} من الصمود · مرحلتك الحالية: {activeStage.title}
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1C2912] dark:text-[#F3F6E9] mt-1 text-balance">
-              دليل المحارب
+              {t.warriorGuideTitle}
             </h1>
             <p className="text-sm text-[#556442] dark:text-[#A2B193] mt-1.5 leading-relaxed">
-              نصائح يومية عملية وتفسيرات نفسية قصيرة تساعدك على فهم ما يحدث داخل ذهنك في كل مرحلة من رحلة التعافي.
+              {t.warriorGuideSub}
             </p>
           </div>
 
@@ -79,7 +83,7 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
             className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-sm font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer"
           >
             <ShieldAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span>بروتوكول الطوارئ</span>
+            <span>{t.emergencyLabel}</span>
           </button>
         </div>
 
@@ -191,31 +195,31 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
         </div>
       </section>
 
-      {/* Bottom 2-Column Split: Daily Advice Library + Short Psychological Q&A */}
+      {/* Bottom 2-Column Split: Compact Daily Advice + Short Psychological Q&A */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Daily Tips with Interactive Category Filter (7 cols) */}
+        {/* Compact Daily Tips (5 cols) */}
         <section
           aria-labelledby="daily-tips-heading"
-          className="lg:col-span-7 bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6 space-y-4"
+          className="lg:col-span-5 bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-4 sm:p-5 space-y-3"
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-2">
             <div>
               <h2
                 id="daily-tips-heading"
-                className="font-display text-lg font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
+                className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
               >
-                نصائح يومية لحماية صمودك
+                {t.dailyTipsTitle}
               </h2>
-              <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-                إرشادات مختصرة وقابلة للتطبيق حسب توقيت يومك
+              <p className="text-[11px] text-[#556442] dark:text-[#A2B193]">
+                {t.dailyTipsSub}
               </p>
             </div>
           </div>
 
           <div
             role="tablist"
-            aria-label="تصفية النصائح اليومية"
-            className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24]"
+            aria-label={t.dailyTipsTitle}
+            className="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24]"
           >
             {TIP_FILTERS.map((filter) => {
               const active = tipFilter === filter.id;
@@ -225,8 +229,11 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => setTipFilter(filter.id)}
-                  className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  onClick={() => {
+                    setTipFilter(filter.id);
+                    setVisibleTipCount(2);
+                  }}
+                  className={`min-h-[30px] px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     active
                       ? 'bg-[#2F6318] text-white dark:bg-[#ECC93B] dark:text-[#11180E]'
                       : 'text-[#556442] dark:text-[#A2B193] hover:text-[#1C2912] dark:hover:text-[#F3F6E9]'
@@ -239,26 +246,52 @@ export function WarriorGuideView({ streakStartedAt, onNavigate }: WarriorGuideVi
           </div>
 
           <div className="divide-y divide-[#D5DEC0] dark:divide-[#2C3B24]">
-            {filteredTips.map((tip) => (
-              <article key={tip.id} className="py-3.5 first:pt-1 last:pb-1 space-y-1">
-                <div className="flex flex-wrap items-center gap-2 text-xs text-[#9A6B06] dark:text-[#ECC93B] font-medium">
-                  <span>{tip.categoryLabel}</span>
+            {filteredTips.slice(0, visibleTipCount).map((tip) => (
+              <article key={tip.id} className="py-2 first:pt-0.5 last:pb-0.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h3 className="text-xs font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
+                    {tip.title}
+                  </h3>
+                  <span className="text-[10px] text-[#9A6B06] dark:text-[#ECC93B] shrink-0">
+                    {tip.categoryLabel}
+                  </span>
                 </div>
-                <h3 className="text-sm font-semibold text-[#1C2912] dark:text-[#F3F6E9]">
-                  {tip.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#556442] dark:text-[#A2B193] leading-relaxed">
+                <p className="text-[11px] text-[#556442] dark:text-[#A2B193] mt-0.5 leading-snug line-clamp-2">
                   {tip.detail}
                 </p>
               </article>
             ))}
           </div>
+
+          {filteredTips.length > 2 && (
+            <div className="pt-2 border-t border-[#D5DEC0] dark:border-[#2C3B24] flex items-center gap-2">
+              {visibleTipCount < filteredTips.length ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleTipCount((prev) => Math.min(filteredTips.length, prev + 2))
+                  }
+                  className="text-xs font-medium text-[#2F6318] dark:text-[#ECC93B] hover:underline cursor-pointer"
+                >
+                  {t.showMoreTips}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setVisibleTipCount(2)}
+                  className="text-xs font-medium text-[#556442] dark:text-[#A2B193] hover:underline cursor-pointer"
+                >
+                  {t.showLessTips}
+                </button>
+              )}
+            </div>
+          )}
         </section>
 
-        {/* Short Psychological Explanations Accordion (5 cols) */}
+        {/* Short Psychological Explanations Accordion (7 cols) */}
         <section
           aria-labelledby="psych-faq-heading"
-          className="lg:col-span-5 bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6 space-y-4"
+          className="lg:col-span-7 bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6 space-y-4"
         >
           <div>
             <h2

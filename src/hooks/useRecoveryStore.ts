@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DEFAULT_HABITS, DEFAULT_PERSONAL_REASONS } from '../data/recoveryContent';
+import { isRtlLanguage } from '../i18n/translations';
 import {
+  AppLanguage,
   DailyCheckIn,
   JournalEntry,
   LogEntryType,
@@ -76,6 +78,7 @@ function createDefaultState(): RecoveryState {
     streakStartedAt: new Date().toISOString(),
     bestStreakSeconds: 0,
     theme: getInitialTheme(),
+    language: 'ar',
     pinCode: null,
     onboarding: DEFAULT_ONBOARDING,
     selectedWeakness: null,
@@ -88,6 +91,8 @@ function createDefaultState(): RecoveryState {
     completedSafeguards: [],
     previousStreaksDays: [],
     notifications: DEFAULT_NOTIFICATIONS,
+    lastCelebratedTitleDays: null,
+    lastCelebratedCups: 0,
   };
 }
 
@@ -150,6 +155,12 @@ export function useRecoveryStore() {
     }
   }, [state.theme]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.lang = state.language;
+    root.dir = isRtlLanguage(state.language) ? 'rtl' : 'ltr';
+  }, [state.language]);
+
   const toggleTheme = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -159,6 +170,21 @@ export function useRecoveryStore() {
 
   const setTheme = useCallback((theme: ThemeMode) => {
     setState((prev) => ({ ...prev, theme }));
+  }, []);
+
+  const setLanguage = useCallback((language: AppLanguage) => {
+    setState((prev) => ({ ...prev, language }));
+  }, []);
+
+  const markAchievementCelebrated = useCallback((titleDays: number, cups: number) => {
+    setState((prev) => ({
+      ...prev,
+      lastCelebratedTitleDays:
+        prev.lastCelebratedTitleDays === null
+          ? titleDays
+          : Math.max(prev.lastCelebratedTitleDays, titleDays),
+      lastCelebratedCups: Math.max(prev.lastCelebratedCups, cups),
+    }));
   }, []);
 
   const saveOnboarding = useCallback((profile: OnboardingProfile) => {
@@ -197,9 +223,19 @@ export function useRecoveryStore() {
     const parsed = new Date(isoDate);
     if (Number.isNaN(parsed.getTime())) return;
     const safeDate = parsed.getTime() > Date.now() ? new Date() : parsed;
+    const newMetrics = getStreakMetrics(safeDate.toISOString(), Date.now());
+    const newCups = Math.min(10, Math.floor(newMetrics.days / 3));
+    const titleTiers = [30, 25, 20, 15, 10, 5, 0];
+    const newTitleDays = titleTiers.find((t) => newMetrics.days >= t) ?? 0;
+
     setState((prev) => ({
       ...prev,
       streakStartedAt: safeDate.toISOString(),
+      lastCelebratedCups: Math.min(prev.lastCelebratedCups, newCups),
+      lastCelebratedTitleDays:
+        prev.lastCelebratedTitleDays !== null && prev.lastCelebratedTitleDays > newTitleDays
+          ? Math.max(0, newTitleDays - 5)
+          : prev.lastCelebratedTitleDays,
     }));
   }, []);
 
@@ -238,6 +274,8 @@ export function useRecoveryStore() {
         ...prev,
         bestStreakSeconds: updatedBest,
         streakStartedAt: now.toISOString(),
+        lastCelebratedTitleDays: null,
+        lastCelebratedCups: 0,
         previousStreaksDays:
           completedDays > 0
             ? [completedDays, ...prev.previousStreaksDays].slice(0, 20)
@@ -520,6 +558,8 @@ export function useRecoveryStore() {
     state,
     toggleTheme,
     setTheme,
+    setLanguage,
+    markAchievementCelebrated,
     saveOnboarding,
     setWeakness,
     setWeaknessCustomNote,
