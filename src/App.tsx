@@ -46,8 +46,6 @@ export default function App() {
     addCustomHabit,
     removeHabit,
     toggleSafeguard,
-    addPersonalReason,
-    removePersonalReason,
     setPinCode,
     updateNotificationPrefs,
     importState,
@@ -188,8 +186,6 @@ export default function App() {
             onNavigate={setActiveTab}
             onSaveCheckIn={saveDailyCheckIn}
             onQuickVictory={handleQuickVictory}
-            onAddReason={addPersonalReason}
-            onRemoveReason={removePersonalReason}
             onSelectWeakness={setWeakness}
             onChangeWeaknessNote={setWeaknessCustomNote}
             onMarkSolutionApplied={markDailySolutionApplied}

@@ -23,7 +23,6 @@ export function getLocalDateKey(date: Date = new Date()): string {
 
 export function getStreakMetrics(streakStartedAt: string, nowMs: number = Date.now()) {
   const startDate = new Date(streakStartedAt);
-  const nowDate = new Date(nowMs);
 
   if (Number.isNaN(startDate.getTime()) || nowMs <= startDate.getTime()) {
     return {
@@ -32,32 +31,16 @@ export function getStreakMetrics(streakStartedAt: string, nowMs: number = Date.n
       minutes: 0,
       seconds: 0,
       elapsedSeconds: 0,
+      totalHours: 0,
     };
   }
 
   const elapsedSeconds = Math.max(0, Math.floor((nowMs - startDate.getTime()) / 1000));
-
-  const startMidnight = new Date(
-    startDate.getFullYear(),
-    startDate.getMonth(),
-    startDate.getDate()
-  ).getTime();
-  const nowMidnight = new Date(
-    nowDate.getFullYear(),
-    nowDate.getMonth(),
-    nowDate.getDate()
-  ).getTime();
-
-  const days = Math.max(0, Math.round((nowMidnight - startMidnight) / 86400000));
-
-  const subDaySeconds =
-    days === 0
-      ? elapsedSeconds
-      : nowDate.getHours() * 3600 + nowDate.getMinutes() * 60 + nowDate.getSeconds();
-
-  const hours = Math.floor(subDaySeconds / 3600);
-  const minutes = Math.floor((subDaySeconds % 3600) / 60);
-  const seconds = subDaySeconds % 60;
+  const totalHours = Math.floor(elapsedSeconds / 3600);
+  const days = Math.floor(elapsedSeconds / 86400);
+  const hours = Math.floor((elapsedSeconds % 86400) / 3600);
+  const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+  const seconds = elapsedSeconds % 60;
 
   return {
     days,
@@ -65,6 +48,7 @@ export function getStreakMetrics(streakStartedAt: string, nowMs: number = Date.n
     minutes,
     seconds,
     elapsedSeconds,
+    totalHours,
   };
 }
 

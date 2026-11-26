@@ -1,18 +1,10 @@
-import {
-  CheckCircle2,
-  Edit3,
-  ShieldAlert,
-  Sparkles,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ShieldAlert } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { DailyCheckIn, NavTab } from '../types/recovery';
 
 interface DailyCheckInCardProps {
   todayKey: string;
   todayCheckIn?: DailyCheckIn;
-  yesterdayCheckIn?: DailyCheckIn;
   onSaveCheckIn: (payload: {
     mood: number;
     urgeLevel: number;
@@ -49,48 +41,9 @@ const QUICK_TAGS = [
   'تشتّت بالهاتف',
 ];
 
-function getGuidance(mood: number, urgeLevel: number): {
-  tone: 'alert' | 'warm' | 'positive';
-  text: string;
-} {
-  if (urgeLevel >= 4) {
-    return {
-      tone: 'alert',
-      text: 'شدة الرغبة مرتفعة الآن — غيّر مكانك فوراً ولا تبقَ وحدك مع شاشة مفتوحة.',
-    };
-  }
-  if (mood <= 2) {
-    return {
-      tone: 'warm',
-      text: 'ثقل المزاج مرحلة مؤقتة في التعافي؛ خفّف عن نفسك بخطوة بسيطة كالمشي أو الوضوء.',
-    };
-  }
-  if (mood >= 4 && urgeLevel <= 2) {
-    return {
-      tone: 'positive',
-      text: 'يوم متزن وهادئ — استثمر هذا الصفاء في عادة نافعة تثبّت بها مسارك.',
-    };
-  }
-  return {
-    tone: 'warm',
-    text: 'ملاحظتك اليومية ترفع وعيك بنقاط ضعفك وتساعدك على توقع الموجات قبل حدوثها.',
-  };
-}
-
-function formatSavedTime(iso?: string): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('ar-EG', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export function DailyCheckInCard({
   todayKey,
   todayCheckIn,
-  yesterdayCheckIn,
   onSaveCheckIn,
   onNavigate,
 }: DailyCheckInCardProps) {
@@ -100,39 +53,20 @@ export function DailyCheckInCard({
   const [urgeLevel, setUrgeLevel] = useState<number>(todayCheckIn?.urgeLevel ?? 2);
   const [dailyNote, setDailyNote] = useState<string>(todayCheckIn?.note ?? '');
   const [selectedTags, setSelectedTags] = useState<string[]>(todayCheckIn?.tags ?? []);
-  const [isEditing, setIsEditing] = useState<boolean>(() => !isAlreadyCheckedInToday);
-  const [justSaved, setJustSaved] = useState(false);
 
-  // Sync draft state when calendar day changes or stored check-in updates externally
   useEffect(() => {
     setMood(todayCheckIn?.mood ?? 4);
     setUrgeLevel(todayCheckIn?.urgeLevel ?? 2);
     setDailyNote(todayCheckIn?.note ?? '');
     setSelectedTags(todayCheckIn?.tags ?? []);
-    setIsEditing(!todayCheckIn?.checkedInAt);
-  }, [todayKey, todayCheckIn?.checkedInAt]);
+  }, [todayKey, todayCheckIn]);
+
+  if (isAlreadyCheckedInToday) {
+    return null;
+  }
 
   const activeMoodInfo = MOOD_LEVELS.find((m) => m.value === mood) ?? MOOD_LEVELS[3];
   const activeUrgeInfo = URGE_LEVELS.find((u) => u.value === urgeLevel) ?? URGE_LEVELS[1];
-  const guidance = useMemo(() => getGuidance(mood, urgeLevel), [mood, urgeLevel]);
-
-  const yesterdayComparison = useMemo(() => {
-    if (!yesterdayCheckIn?.checkedInAt) return null;
-    const moodDiff = mood - yesterdayCheckIn.mood;
-    const urgeDiff = urgeLevel - yesterdayCheckIn.urgeLevel;
-
-    const parts: { text: string; good: boolean }[] = [];
-    if (moodDiff > 0) parts.push({ text: 'مزاجك أفضل من أمس', good: true });
-    else if (moodDiff < 0) parts.push({ text: 'المزاج أهدأ من أمس قليلاً', good: false });
-
-    if (urgeDiff < 0) parts.push({ text: 'شدة الرغبة أقل من أمس', good: true });
-    else if (urgeDiff > 0) parts.push({ text: 'الرغبة أعلى من أمس', good: false });
-
-    if (parts.length === 0) {
-      return { text: 'استقرار مماثل ليوم أمس', good: true };
-    }
-    return parts[0];
-  }, [mood, urgeLevel, yesterdayCheckIn]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -148,161 +82,26 @@ export function DailyCheckInCard({
       note: dailyNote,
       tags: selectedTags,
     });
-    setJustSaved(true);
-    setIsEditing(false);
-    window.setTimeout(() => setJustSaved(false), 3000);
   };
 
   return (
     <section
       aria-labelledby="checkin-heading"
-      className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6"
+      className="bg-[#FCFDF7]/90 dark:bg-[#192315]/90 backdrop-blur-md border border-[#D5DEC0] dark:border-[#2C3B24] rounded-2xl p-6 flex flex-col justify-between"
     >
-      <div className="flex items-start justify-between gap-2 flex-wrap">
-        <div>
-          <h2
-            id="checkin-heading"
-            className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
-          >
-            تقييم اليوم السريع
-          </h2>
-          <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
-            {isAlreadyCheckedInToday
-              ? `تم الحفظ اليوم${
-                  todayCheckIn?.checkedInAt
-                    ? ` · ${formatSavedTime(todayCheckIn.checkedInAt)}`
-                    : ''
-                }`
-              : 'سجّل حالتك في ثوانٍ لمتابعة مؤشرات تعافيك'}
-          </p>
-        </div>
-
-        <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
-            isAlreadyCheckedInToday
-              ? 'bg-[#EEF3DF] dark:bg-[#26351F] text-[#2F6E1B] dark:text-[#65C449]'
-              : 'bg-[#FEF4BE]/70 dark:bg-[#ECC93B]/15 text-[#9A6B06] dark:text-[#ECC93B]'
-          }`}
+      <div>
+        <h2
+          id="checkin-heading"
+          className="font-display text-base font-semibold text-[#1C2912] dark:text-[#F3F6E9]"
         >
-          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-          <span>{isAlreadyCheckedInToday ? 'مكتمل اليوم' : 'بانتظار التقييم'}</span>
-        </span>
+          تقييم اليوم السريع
+        </h2>
+        <p className="text-xs text-[#556442] dark:text-[#A2B193] mt-0.5">
+          سجّل حالتك في ثوانٍ لمتابعة مؤشرات تعافيك
+        </p>
       </div>
 
-      {!isEditing && isAlreadyCheckedInToday ? (
-        <div className="mt-4 space-y-3.5">
-          {justSaved && (
-            <div className="rounded-xl bg-[#EEF3DF] dark:bg-[#26351F] border border-[#2F6E1B]/30 px-3 py-2 text-xs font-medium text-[#2F6E1B] dark:text-[#65C449]">
-              تم حفظ تقييم اليوم وتحديث مؤشرات التعافي بنجاح.
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] p-3">
-              <div className="text-[11px] text-[#556442] dark:text-[#A2B193]">المزاج اليوم</div>
-              <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="font-mono-num text-lg font-bold text-[#9A6B06] dark:text-[#ECC93B]">
-                  {mood}/٥
-                </span>
-                <span className="text-xs font-medium text-[#1C2912] dark:text-[#F3F6E9]">
-                  · {activeMoodInfo.label}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] p-3">
-              <div className="text-[11px] text-[#556442] dark:text-[#A2B193]">شدة الرغبة</div>
-              <div className="mt-1 flex items-baseline gap-1.5">
-                <span
-                  className={`font-mono-num text-lg font-bold ${
-                    urgeLevel >= 4
-                      ? 'text-[#DC2626] dark:text-[#F87171]'
-                      : urgeLevel === 3
-                      ? 'text-[#9A6B06] dark:text-[#ECC93B]'
-                      : 'text-[#2F6E1B] dark:text-[#65C449]'
-                  }`}
-                >
-                  {urgeLevel}/٥
-                </span>
-                <span className="text-xs font-medium text-[#1C2912] dark:text-[#F3F6E9]">
-                  · {activeUrgeInfo.label}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {selectedTags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2.5 py-1 rounded-lg bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-[11px] font-medium text-[#1C2912] dark:text-[#F3F6E9]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {dailyNote.trim() && (
-            <p className="rounded-xl bg-[#F4F6E8] dark:bg-[#11180E] border border-[#D5DEC0] dark:border-[#2C3B24] px-3 py-2.5 text-xs text-[#1C2912] dark:text-[#F3F6E9] leading-relaxed">
-              “{dailyNote}”
-            </p>
-          )}
-
-          {yesterdayComparison && (
-            <div className="flex items-center gap-1.5 text-xs text-[#556442] dark:text-[#A2B193]">
-              {yesterdayComparison.good ? (
-                <TrendingUp
-                  className="w-3.5 h-3.5 text-[#2F6E1B] dark:text-[#65C449] shrink-0"
-                  aria-hidden="true"
-                />
-              ) : (
-                <TrendingDown
-                  className="w-3.5 h-3.5 text-[#C98F0A] dark:text-[#ECC93B] shrink-0"
-                  aria-hidden="true"
-                />
-              )}
-              <span>مقارنة بأمس: {yesterdayComparison.text}</span>
-            </div>
-          )}
-
-          <div
-            className={`rounded-xl border p-3 space-y-2 ${
-              guidance.tone === 'alert'
-                ? 'bg-[#DC2626]/10 border-[#DC2626]/30 text-[#B91C1C] dark:text-[#FCA5A5]'
-                : guidance.tone === 'positive'
-                ? 'bg-[#EEF3DF] dark:bg-[#26351F] border-[#2F6E1B]/25 text-[#2F6E1B] dark:text-[#65C449]'
-                : 'bg-[#F4F6E8] dark:bg-[#11180E] border-[#D5DEC0] dark:border-[#2C3B24] text-[#556442] dark:text-[#A2B193]'
-            }`}
-          >
-            <div className="flex items-start gap-2 text-xs leading-relaxed">
-              <Sparkles className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-              <span>{guidance.text}</span>
-            </div>
-            {urgeLevel >= 4 && (
-              <button
-                type="button"
-                onClick={() => onNavigate('sos')}
-                className="w-full min-h-[38px] px-3 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>افتح بروتوكول الطوارئ الآن</span>
-              </button>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="w-full min-h-[40px] rounded-xl bg-[#F4F6E8] dark:bg-[#222F1C] border border-[#D5DEC0] dark:border-[#2C3B24] text-xs font-medium text-[#1C2912] dark:text-[#F3F6E9] inline-flex items-center justify-center gap-1.5 hover:bg-[#E5ECD0] dark:hover:bg-[#2B3B24] cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>تعديل تقييم اليوم</span>
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Mood 1-5 with clear labels */}
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
@@ -447,25 +246,13 @@ export function DailyCheckInCard({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              className="flex-1 min-h-[42px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
-            >
-              حفظ تقييم اليوم
-            </button>
-            {isAlreadyCheckedInToday && (
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="min-h-[42px] px-3.5 rounded-xl border border-[#D5DEC0] dark:border-[#2C3B24] text-xs font-medium text-[#556442] dark:text-[#A2B193] cursor-pointer"
-              >
-                إلغاء
-              </button>
-            )}
-          </div>
+          <button
+            type="submit"
+            className="w-full min-h-[42px] rounded-xl bg-[#2F6318] hover:bg-[#244F12] dark:bg-[#ECC93B] dark:hover:bg-[#F4D658] text-white dark:text-[#11180E] text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
+          >
+            حفظ تقييم اليوم
+          </button>
         </form>
-      )}
     </section>
   );
 }

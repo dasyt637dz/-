@@ -109,6 +109,11 @@ export interface MilestoneInfo {
   scienceNote: string;
 }
 
+export interface StreakTitleTier {
+  days: number;
+  title: string;
+}
+
 export interface NotificationPreferences {
   salawatBannerEnabled: boolean;
   salawatPeriodicNotifications: boolean;

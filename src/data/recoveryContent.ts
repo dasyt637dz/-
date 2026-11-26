@@ -2,6 +2,7 @@ import {
   MilestoneInfo,
   ReplacementHabit,
   SafeguardItem,
+  StreakTitleTier,
   TimeOfDay,
   WarriorPsychNote,
   WarriorPsychStage,
@@ -486,6 +487,30 @@ export const RECOVERY_MILESTONES: MilestoneInfo[] = [
       'مرحلة التحرر الكامل من الاستجابة التلقائية للمحفزات؛ يتحول التركيز من مقاومة العادة إلى بناء الحياة.',
   },
 ];
+
+export const STREAK_TITLES: StreakTitleTier[] = [
+  { days: 0, title: 'مبتدئ' },
+  { days: 5, title: 'شجاع' },
+  { days: 10, title: 'مقاتل' },
+  { days: 15, title: 'جسور' },
+  { days: 20, title: 'مخضرم' },
+  { days: 25, title: 'فارس' },
+  { days: 30, title: 'محارب حقيقي' },
+];
+
+export function getStreakTitleInfo(days: number): {
+  current: StreakTitleTier;
+  next: StreakTitleTier | null;
+} {
+  let current = STREAK_TITLES[0];
+  for (const tier of STREAK_TITLES) {
+    if (days >= tier.days) {
+      current = tier;
+    }
+  }
+  const next = STREAK_TITLES.find((tier) => days < tier.days) ?? null;
+  return { current, next };
+}
 
 export const COMMON_TRIGGERS: string[] = [
   'الفراغ والملل',
